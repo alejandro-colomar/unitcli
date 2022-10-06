@@ -17,7 +17,33 @@
 #
 #####################################################################
 
-repo_setup()
+program_name="$0";
+
+print_help()
+{
+    echo 'SYNOPSIS';
+    echo "      $program_name [-h] SUBCOMMAND [ARGS]";
+    echo;
+    echo 'DESCRIPTION';
+    echo '      This program intends to make it easier for first-time users';
+    echo '      to install and configure an NGINX Unit server.';
+    echo;
+    echo '      Run the -h option of subcommands to read their help.';
+    echo;
+    echo 'SUBCOMMANDS';
+    echo '      repo-config';
+    echo '              Configure the package manager repository to later';
+    echo '              install NGINX Unit';
+    echo;
+    echo '      welcome Configure a running instance of NGINX Unit with a';
+    echo '              basic configuration.';
+    echo;
+    echo 'OPTIONS';
+    echo '      -h      Print this help and exit.';
+    echo;
+}
+
+repo_config()
 {
     export LC_ALL=C
 
@@ -318,4 +344,210 @@ __EOF__
     exit 0
 }
 
-repo_config
+
+unitd_config()
+{
+    dry_run='no';
+
+    print_help_unitd_config()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name welcome [-hn]";
+        echo
+        echo 'DESCRIPTION';
+        echo '      This command intends to make it easier for first-time';
+        echo '      users to configure a running NGINX Unit server.';
+        echo
+        echo 'OPTIONS';
+        echo '      -h      Print this help and exit.';
+        echo
+        echo '      -n      Dry run.  Print the commands that would be run,'
+        echo '              instead of actually running them.  They are';
+        echo '              preceeded by a line explaining what they do.';
+        echo '              This option is recommended for learning.';
+    }
+
+    dry_run_echo()
+    {
+        test "$dry_run" = "yes" \
+        && echo "$@";
+    }
+
+    dry_run_eval()
+    {
+        if test "$dry_run" = "yes"; then
+            echo "    $@";
+        else
+            eval "$@";
+        fi;
+    }
+
+    err_no_pid()
+    {
+        >&2 echo 'Unit is not running.';
+        exit 1;
+    }
+
+    err_pids()
+    {
+        >&2 echo 'There should be only one instance of Unit running.';
+        exit 1;
+    }
+
+    err_conf()
+    {
+        >&2 echo 'Unit is already configured.'
+        exit 1;
+    }
+
+    err_curl()
+    {
+        >&2 echo "Can't connect to control socket.";
+        exit 1;
+    }
+
+    while getopts "hn" opt; do
+        case "$opt" in
+        h)
+            print_help_unitd_config;
+            exit 0;
+            ;;
+        n)
+            dry_run='yes';
+            ;;
+        esac;
+    done;
+
+    www="/srv/www/unit/index.html";
+    test -e "$www" \
+    && www="$(mktemp)";
+
+    # Check there's exactly one instance.
+    ps ax \
+    | grep 'unit: main' \
+    | grep -v grep \
+    | wc -l \
+    | if read -r nprocs; then
+        test 0 -eq "$nprocs" \
+        && err_no_pid;
+
+        test 1 -eq "$nprocs" \
+        || err_pids;
+    fi;
+
+    ps ax \
+    | grep 'unit: main' \
+    | grep -v grep \
+    | sed 's/.*\[\(.*\)].*/\1/' \
+    | if read -r cmd; then
+        # Check unitd is not configured already.
+        if echo "$cmd" | grep '\--state' >/dev/null; then
+            echo "$cmd" \
+            | sed 's/ --/\n--/g' \
+            | grep '\--state' \
+            | cut -d' ' -f2;
+        else
+            $cmd --help \
+            | sed -n '/\--state/,+1p' \
+            | grep 'default:' \
+            | sed 's/ *default: "\(.*\)"/\1/';
+        fi \
+        | sed 's,$,/conf.json,' \
+        | xargs test -e \
+        && err_conf;
+
+        if echo "$cmd" | grep '\--control' >/dev/null; then
+            echo "$cmd" \
+            | sed 's/ --/\n--/g' \
+            | grep '\--control' \
+            | cut -d' ' -f2;
+        else
+            $cmd --help \
+            | sed -n '/\--control/,+1p' \
+            | grep 'default:' \
+            | sed 's/ *default: "\(.*\)"/\1/';
+        fi;
+    fi \
+    | if read -r control; then
+        if echo "$control" | grep '^unix:' >/dev/null; then
+            unix_socket="$(echo "$control" | sed 's/unix:/ --unix-socket /')";
+            host='localhost';
+        else
+            unix_socket='';
+            host="$control";
+        fi;
+
+        # Check we can connect to the control socket.
+        curl $unix_socket "http://$host/config/" >/dev/null 2>&1 \
+        || err_curl;
+
+        (
+            nc -l localhost 0 &
+
+            lsof -i \
+            | grep $! \
+            | awk '{print $9}' \
+            | cut -d':' -f2;
+
+            kill $!;
+        ) \
+        | if read -r port; then
+            dry_run_echo 'Create a file to serve:';
+            dry_run_eval "mkdir -p $(dirname $www);";
+            dry_run_eval "echo 'Welcome to NGINX Unit!' >'$www';";
+            dry_run_echo;
+            dry_run_echo 'Give it appropriate permissions:';
+            dry_run_eval "chmod 644 '$www';";
+            dry_run_echo;
+
+            dry_run_echo 'Configure unitd:'
+            dry_run_eval "cat <<EOF \\
+    | sed 's/8080/$port/' \\
+    | curl -X PUT -d@- $unix_socket 'http://$host/config/';
+    {
+        \"listeners\": {
+            \"*:8080\": {
+                \"pass\": \"routes\"
+            }
+        },
+        \"routes\": [{
+            \"action\": {
+                \"share\": \"$www\"
+            }
+        }]
+    }
+EOF";
+            dry_run_echo;
+
+            echo
+            echo "You may want to try the following commands now:"
+            echo
+            echo "Read the current unitd configuration:"
+            echo "  sudo curl $unix_socket http://$host/config/"
+            echo
+            echo "Browse the welcome page:"
+            echo "  curl http://localhost:$port";
+        fi;
+    fi;
+}
+
+while getopts "h" opt; do
+    case "$opt" in
+    h)
+        print_help;
+        exit 0;
+        ;;
+    esac;
+done;
+shift "$((OPTIND-1))";
+
+case $1 in
+welcome)
+    shift;
+    unitd_config $@;
+    ;;
+repo-config)
+    shift;
+    repo_config $@;
+    ;;
+esac;

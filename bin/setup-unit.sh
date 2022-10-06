@@ -39,7 +39,8 @@ print_help()
     echo '              basic configuration.';
     echo;
     echo 'OPTIONS';
-    echo '      -h      Print this help and exit.';
+    echo '      -h, --help';
+    echo '              Print this help and exit.';
     echo;
 }
 
@@ -353,15 +354,17 @@ unitd_config()
     {
         echo 'SYNOPSIS';
         echo "      $program_name welcome [-hn]";
-        echo
+        echo;
         echo 'DESCRIPTION';
         echo '      This command intends to make it easier for first-time';
         echo '      users to configure a running NGINX Unit server.';
-        echo
+        echo;
         echo 'OPTIONS';
-        echo '      -h      Print this help and exit.';
-        echo
-        echo '      -n      Dry run.  Print the commands that would be run,'
+        echo '      -h, --help';
+        echo '              Print this help and exit.';
+        echo;
+        echo '      -n, --dry-run';
+        echo '              Dry run.  Print the commands that would be run,'
         echo '              instead of actually running them.  They are';
         echo '              preceeded by a line explaining what they do.';
         echo '              This option is recommended for learning.';
@@ -406,16 +409,21 @@ unitd_config()
         exit 1;
     }
 
-    while getopts "hn" opt; do
-        case "$opt" in
-        h)
+    while echo $1 | grep '^-' >/dev/null; do
+        case $1 in
+        -h | --help)
             print_help_unitd_config;
             exit 0;
             ;;
-        n)
+        -n | --dry-run)
             dry_run='yes';
             ;;
+        *)
+            >&2 print_help_unitd_config;
+            exit 1;
+            ;;
         esac;
+        shift;
     done;
 
     www="/srv/www/unit/index.html";
@@ -531,15 +539,19 @@ EOF";
     fi;
 }
 
-while getopts "h" opt; do
-    case "$opt" in
-    h)
+while echo $1 | grep '^-' >/dev/null; do
+    case $1 in
+    -h | --help)
         print_help;
         exit 0;
         ;;
+    *)
+        >&2 print_help;
+        exit 1;
+        ;;
     esac;
+    shift;
 done;
-shift "$((OPTIND-1))";
 
 case $1 in
 welcome)

@@ -345,6 +345,9 @@ unitd_config()
     | xargs test 0 -ne \
     && err "This script requires root privileges to run."
 
+    test command -v curl >/dev/null 2>&1
+    || err "Error: curl not found in PATH.  It must be installed to run this script."
+
     www="/srv/www/unit/index.html";
     test -e "$www" \
     && www="$(mktemp)";

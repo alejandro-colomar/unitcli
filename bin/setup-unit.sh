@@ -409,6 +409,12 @@ unitd_config()
         exit 1;
     }
 
+    err_freeport()
+    {
+        >&2 echo "Can't find an available port.";
+        exit 1;
+    }
+
     while echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
         case $1 in
         -h | --help)
@@ -490,14 +496,75 @@ unitd_config()
         || err_curl;
 
         (
-            nc -l localhost 0 &
+            freeport="$(mktemp -t freeport-XXXXXX)";
 
-            lsof -i \
-            | grep $! \
-            | awk '{print $9}' \
-            | cut -d':' -f2;
+            cat <<__EOF__ \
+            | cc -x c -o $freeport -;
+                #include <netinet/in.h>
+                #include <stdio.h>
+                #include <stdlib.h>
+                #include <strings.h>
+                #include <sys/socket.h>
+                #include <unistd.h>
 
-            kill $!;
+
+                int32_t get_free_port(void);
+
+
+                int
+                main(void)
+                {
+                    int32_t  port;
+
+                    port = get_free_port();
+                    if (port == -1)
+                        exit(EXIT_FAILURE);
+
+                    printf("%d\n", port);
+                    exit(EXIT_SUCCESS);
+                }
+
+
+                int32_t
+                get_free_port(void)
+                {
+                    int                 sfd;
+                    int32_t             port;
+                    socklen_t           len;
+                    struct sockaddr_in  addr;
+
+                    sfd = socket(PF_INET, SOCK_STREAM, 0);
+                    if (sfd == -1) {
+                        perror("socket()");
+                        return -1;
+                    }
+
+                    bzero(&addr, sizeof(addr));
+                    addr.sin_family = AF_INET;
+                    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+                    addr.sin_port = htons(0);  // random port
+
+                    len = sizeof(addr);
+                    if (bind(sfd, (struct sockaddr *) &addr, len)) {
+                        perror("bind()");
+                        goto fail;
+                    }
+
+                    if (getsockname(sfd, (struct sockaddr *) &addr, &len)) {
+                        perror("getsockname()");
+                        goto fail;
+                    }
+
+                    port = ntohs(addr.sin_port);
+
+                fail:
+                    close(sfd);
+                    return port;
+                }
+__EOF__
+
+            $freeport \
+            || err_freeport;
         ) \
         | if read -r port; then
             dry_run_echo 'Create a file to serve:';

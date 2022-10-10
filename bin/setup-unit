@@ -381,16 +381,17 @@ unitd_config()
 
     dry_run_echo()
     {
-        test "$dry_run" = "yes" \
-        && echo "$@";
+        if test "$dry_run" = "yes"; then
+            echo "$*";
+        fi;
     }
 
     dry_run_eval()
     {
         if test "$dry_run" = "yes"; then
-            echo "    $@";
+            echo "    $*";
         else
-            eval "$@";
+            eval "$*";
         fi;
     }
 

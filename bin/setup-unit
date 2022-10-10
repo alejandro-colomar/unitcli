@@ -236,9 +236,6 @@ __EOF__
     test command -v curl >/dev/null 2>&1
     || err "Error: curl not found in PATH.  It must be installed to run this script."
 
-    test command -v awk > /dev/null 2>&1
-    || err "Error: awk not found in PATH.  It must be installed to run this script."
-
     id -u \
     | xargs test 0 -ne \
     && err "This script requires root privileges to run."

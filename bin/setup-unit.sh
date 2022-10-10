@@ -409,7 +409,7 @@ unitd_config()
         exit 1;
     }
 
-    while echo $1 | grep '^-' >/dev/null; do
+    while echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
         case $1 in
         -h | --help)
             print_help_unitd_config;
@@ -539,7 +539,7 @@ EOF";
     fi;
 }
 
-while echo $1 | grep '^-' >/dev/null; do
+while echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
     case $1 in
     -h | --help)
         print_help;

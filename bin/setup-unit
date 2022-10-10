@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #####################################################################
 #
@@ -16,6 +16,9 @@
 # sure they are installed.
 #
 #####################################################################
+
+set -Eefuo pipefail;
+shopt -s lastpipe;
 
 program_name="$0";
 
@@ -415,7 +418,7 @@ unitd_config()
         exit 1;
     }
 
-    while echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
+    while test -v 1 && echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
         case $1 in
         -h | --help)
             print_help_unitd_config;

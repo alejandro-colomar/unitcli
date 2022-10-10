@@ -373,6 +373,12 @@ unitd_config()
         echo '              This option is recommended for learning.';
     }
 
+    err()
+    {
+        >&2 echo "$*";
+        exit 1;
+    }
+
     dry_run_echo()
     {
         test "$dry_run" = "yes" \
@@ -386,36 +392,6 @@ unitd_config()
         else
             eval "$@";
         fi;
-    }
-
-    err_no_pid()
-    {
-        >&2 echo 'Unit is not running.';
-        exit 1;
-    }
-
-    err_pids()
-    {
-        >&2 echo 'There should be only one instance of Unit running.';
-        exit 1;
-    }
-
-    err_conf()
-    {
-        >&2 echo 'Unit is already configured.'
-        exit 1;
-    }
-
-    err_curl()
-    {
-        >&2 echo "Can't connect to control socket.";
-        exit 1;
-    }
-
-    err_freeport()
-    {
-        >&2 echo "Can't find an available port.";
-        exit 1;
     }
 
     while test -v 1 && echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
@@ -446,10 +422,10 @@ unitd_config()
     | wc -l \
     | if read -r nprocs; then
         test 0 -eq "$nprocs" \
-        && err_no_pid;
+        && err 'Unit is not running.';
 
         test 1 -eq "$nprocs" \
-        || err_pids;
+        || err 'There should be only one instance of Unit running.';
     fi;
 
     ps ax \
@@ -471,7 +447,7 @@ unitd_config()
         fi \
         | sed 's,$,/conf.json,' \
         | xargs test -e \
-        && err_conf;
+        && err 'Unit is already configured.'
 
         if echo "$cmd" | grep '\--control' >/dev/null; then
             echo "$cmd" \
@@ -496,7 +472,7 @@ unitd_config()
 
         # Check we can connect to the control socket.
         curl $unix_socket "http://$host/config/" >/dev/null 2>&1 \
-        || err_curl;
+        || err "Can't connect to control socket.";
 
         (
             freeport="$(mktemp -t freeport-XXXXXX)";
@@ -567,7 +543,7 @@ unitd_config()
 __EOF__
 
             $freeport \
-            || err_freeport;
+            || err "Can't find an available port.";
         ) \
         | if read -r port; then
             dry_run_echo 'Create a file to serve:';

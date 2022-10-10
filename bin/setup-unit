@@ -253,19 +253,6 @@ __EOF__
         return 0
     }
 
-
-    am_i_root()
-    {
-
-        USERID=$(id -u)
-        if [ 0 -ne "$USERID" ]; then
-            echoErr "This script requires root privileges to run; now exiting."
-            exit 1
-        fi
-
-        return 0
-    }
-
     echoErr ()
     {
         echo "$*" 1>&2;
@@ -293,7 +280,9 @@ __EOF__
                   # "centos", "suse", "amzn", or "freebsd"
         osVersion=""
 
-        am_i_root
+        id -u \
+        | xargs test 0 -ne \
+        && err "This script requires root privileges to run."
 
         echo "This script will setup repositories for NGINX Unit"
 

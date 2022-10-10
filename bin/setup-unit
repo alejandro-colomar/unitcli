@@ -62,18 +62,6 @@ repo_config()
 {
     export LC_ALL=C
 
-    checkOSPrereqs ()
-    {
-        if ! command -v curl > /dev/null 2>&1
-        then
-            err "Error: curl not found in PATH.  It must be installed to run this script."
-        fi
-
-        if ! command -v awk > /dev/null 2>&1
-        then
-            err "Error: awk not found in PATH.  It must be installed to run this script."
-        fi
-    }
 
     #####################################################################
     # Function getOS
@@ -264,7 +252,11 @@ __EOF__
     {
         debug=0 # If set to 1, debug message will be displayed
 
-        checkOSPrereqs
+        test command -v curl >/dev/null 2>&1
+        || err "Error: curl not found in PATH.  It must be installed to run this script."
+
+        test command -v awk > /dev/null 2>&1
+        || err "Error: awk not found in PATH.  It must be installed to run this script."
 
         # The name and location of the files that will be used to get Linux
         # release info

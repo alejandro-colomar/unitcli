@@ -47,26 +47,32 @@ print_help()
     echo;
 }
 
+warn()
+{
+    >&2 echo "$*";
+}
+
+err()
+{
+    >&2 echo "$*";
+    exit 1;
+}
+
 repo_config()
 {
     export LC_ALL=C
 
     checkOSPrereqs ()
     {
-
         if ! command -v curl > /dev/null 2>&1
         then
-            echo "Error: curl not found in PATH.  It must be installed to run this script."
-            exit 1
+            err "Error: curl not found in PATH.  It must be installed to run this script."
         fi
 
         if ! command -v awk > /dev/null 2>&1
         then
-            echo "Error: awk not found in PATH.  It must be installed to run this script."
-            exit 1
+            err "Error: awk not found in PATH.  It must be installed to run this script."
         fi
-
-        return 0
     }
 
     #####################################################################
@@ -102,10 +108,8 @@ repo_config()
         os=$(uname | tr '[:upper:]' '[:lower:]')
 
         if [ "$os" != "linux" ] && [ "$os" != "freebsd" ]; then
-            echoErr "Error: Operating system is not Linux or FreeBSD, can't proceed"
-            echo "On macOS, try 'brew install nginx/unit/unit'"
-            echo
-            return 1
+            warn "Error: Operating system is not Linux or FreeBSD, can't proceed"
+            err  "On macOS, try 'brew install nginx/unit/unit'"
         fi
 
         if [ "$os" = "linux" ]; then
@@ -122,18 +126,14 @@ repo_config()
                     osName=centos
                     osVersion=$(rpm -q centos-release | sed 's/centos-release-//' | sed 's/\..*//' | awk -F- '{print $1"."$2;}')
                 else
-                    echoErr "Error: Unable to determine the operating system and version, or the OS is not supported"
-                    echo
-                    return 1
+                    err "Error: Unable to determine the operating system and version, or the OS is not supported"
                 fi
             fi
         else
             osName=$os
             osVersion=$(uname -rs | awk -F '[ -]' '{print $2}')
             if [ -z "$osVersion" ]; then
-                echoErr "Unable to get the FreeBSD version"
-                echo
-                return 1
+                err "Unable to get the FreeBSD version"
             fi
         fi
 
@@ -253,11 +253,6 @@ __EOF__
         return 0
     }
 
-    echoErr ()
-    {
-        echo "$*" 1>&2;
-    }
-
     echoDebug ()
     {
         if [ "$debug" -eq 1 ]; then
@@ -286,14 +281,7 @@ __EOF__
 
         echo "This script will setup repositories for NGINX Unit"
 
-        # Check the OS
         osNameVersion=$(getOS)
-        if [ -z "$osNameVersion" ]; then
-            echoErr "Error getting the operating system information"
-            exit 1
-        fi
-
-        # Break out the OS, name, and version
         os=$(echo "$osNameVersion" | awk -F: '{print $1}')
         osName=$(echo "$osNameVersion" | awk -F: '{print $2}')
         osVersion=$(echo "$osNameVersion" | awk -F: '{print $3}')
@@ -322,8 +310,7 @@ __EOF__
             installFedora
             ;;
         *)
-            echo "$osName is not supported"
-            exit 1
+            err "$osName is not supported"
             ;;
         esac
 
@@ -360,12 +347,6 @@ unitd_config()
         echo '              instead of actually running them.  They are';
         echo '              preceeded by a line explaining what they do.';
         echo '              This option is recommended for learning.';
-    }
-
-    err()
-    {
-        >&2 echo "$*";
-        exit 1;
     }
 
     dry_run_echo()

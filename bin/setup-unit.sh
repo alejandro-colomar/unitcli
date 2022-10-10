@@ -576,7 +576,7 @@ __EOF__
             dry_run_echo;
 
             dry_run_echo 'Configure unitd:'
-            dry_run_eval "cat <<EOF \\
+            dry_run_eval "cat <<__EOF__ \\
     | sed 's/8080/$port/' \\
     | curl -X PUT -d@- $unix_socket 'http://$host/config/';
     {
@@ -591,7 +591,7 @@ __EOF__
             }
         }]
     }
-EOF";
+__EOF__";
             dry_run_echo;
 
             echo

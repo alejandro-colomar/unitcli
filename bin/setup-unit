@@ -20,6 +20,8 @@
 set -Eefuo pipefail;
 shopt -s lastpipe;
 
+export LC_ALL=C
+
 program_name="$0";
 
 print_help()
@@ -60,9 +62,6 @@ err()
 
 repo_config()
 {
-    export LC_ALL=C
-
-
     #####################################################################
     # Function getOS
     #
@@ -87,8 +86,6 @@ repo_config()
     #####################################################################
     getOS ()
     {
-        LC_ALL=C
-
         os=$(uname | tr '[:upper:]' '[:lower:]')
 
         if [ "$os" != "linux" ] && [ "$os" != "freebsd" ]; then

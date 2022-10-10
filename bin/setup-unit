@@ -419,174 +419,176 @@ unitd_config()
     test -e "$www" \
     && www="$(mktemp)";
 
-    # Check there's exactly one instance.
     ps ax \
     | grep 'unit: main' \
     | grep -v grep \
     | wc -l \
-    | if read -r nprocs; then
-        test 0 -eq "$nprocs" \
-        && err 'Unit is not running.';
+    | read -r nprocs \
+    ||:
 
-        test 1 -eq "$nprocs" \
-        || err 'There should be only one instance of Unit running.';
-    fi;
+    test 0 -eq "$nprocs" \
+    && err 'Unit is not running.';
+
+    test 1 -ne "$nprocs" \
+    && err 'There should be only one instance of Unit running.';
 
     ps ax \
     | grep 'unit: main' \
     | grep -v grep \
     | sed 's/.*\[\(.*\)].*/\1/' \
-    | if read -r cmd; then
-        # Check unitd is not configured already.
-        if echo "$cmd" | grep '\--state' >/dev/null; then
-            echo "$cmd" \
-            | sed 's/ --/\n--/g' \
-            | grep '\--state' \
-            | cut -d' ' -f2;
-        else
-            $cmd --help \
-            | sed -n '/\--state/,+1p' \
-            | grep 'default:' \
-            | sed 's/ *default: "\(.*\)"/\1/';
-        fi \
-        | sed 's,$,/conf.json,' \
-        | xargs test -e \
-        && err 'Unit is already configured.'
+    | read -r cmd;
 
-        if echo "$cmd" | grep '\--control' >/dev/null; then
-            echo "$cmd" \
-            | sed 's/ --/\n--/g' \
-            | grep '\--control' \
-            | cut -d' ' -f2;
-        else
-            $cmd --help \
-            | sed -n '/\--control/,+1p' \
-            | grep 'default:' \
-            | sed 's/ *default: "\(.*\)"/\1/';
-        fi;
+    # Check unitd is not configured already.
+    echo "$cmd" \
+    | if grep '\--state' >/dev/null; then
+        echo "$cmd" \
+        | sed 's/ --/\n--/g' \
+        | grep '\--state' \
+        | cut -d' ' -f2;
+    else
+        $cmd --help \
+        | sed -n '/\--state/,+1p' \
+        | grep 'default:' \
+        | sed 's/ *default: "\(.*\)"/\1/';
     fi \
-    | if read -r control; then
-        if echo "$control" | grep '^unix:' >/dev/null; then
-            unix_socket="$(echo "$control" | sed 's/unix:/ --unix-socket /')";
-            host='localhost';
-        else
-            unix_socket='';
-            host="$control";
-        fi;
+    | sed 's,$,/conf.json,' \
+    | xargs test -e \
+    && err 'Unit is already configured.'
 
-        # Check we can connect to the control socket.
-        curl $unix_socket "http://$host/config/" >/dev/null 2>&1 \
-        || err "Can't connect to control socket.";
+    echo "$cmd" \
+    | if grep '\--control' >/dev/null; then
+        echo "$cmd" \
+        | sed 's/ --/\n--/g' \
+        | grep '\--control' \
+        | cut -d' ' -f2;
+    else
+        $cmd --help \
+        | sed -n '/\--control/,+1p' \
+        | grep 'default:' \
+        | sed 's/ *default: "\(.*\)"/\1/';
+    fi \
+    | read -r control;
 
-        (
-            freeport="$(mktemp -t freeport-XXXXXX)";
+    if echo "$control" | grep '^unix:' >/dev/null; then
+        unix_socket="$(echo "$control" | sed 's/unix:/ --unix-socket /')";
+        host='localhost';
+    else
+        unix_socket='';
+        host="$control";
+    fi;
 
-            cat <<__EOF__ \
-            | cc -x c -o $freeport -;
-                #include <netinet/in.h>
-                #include <stdio.h>
-                #include <stdlib.h>
-                #include <strings.h>
-                #include <sys/socket.h>
-                #include <unistd.h>
+    curl $unix_socket "http://$host/config/" >/dev/null 2>&1 \
+    || err "Can't connect to control socket.";
 
+    freeport="$(mktemp -t freeport-XXXXXX)";
 
-                int32_t get_free_port(void);
-
-
-                int
-                main(void)
-                {
-                    int32_t  port;
-
-                    port = get_free_port();
-                    if (port == -1)
-                        exit(EXIT_FAILURE);
-
-                    printf("%d\n", port);
-                    exit(EXIT_SUCCESS);
-                }
+    cat <<__EOF__ \
+    | cc -x c -o $freeport -;
+        #include <netinet/in.h>
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include <strings.h>
+        #include <sys/socket.h>
+        #include <unistd.h>
 
 
-                int32_t
-                get_free_port(void)
-                {
-                    int                 sfd;
-                    int32_t             port;
-                    socklen_t           len;
-                    struct sockaddr_in  addr;
+        int32_t get_free_port(void);
 
-                    sfd = socket(PF_INET, SOCK_STREAM, 0);
-                    if (sfd == -1) {
-                        perror("socket()");
-                        return -1;
-                    }
 
-                    bzero(&addr, sizeof(addr));
-                    addr.sin_family = AF_INET;
-                    addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-                    addr.sin_port = htons(0);  // random port
+        int
+        main(void)
+        {
+            int32_t  port;
 
-                    len = sizeof(addr);
-                    if (bind(sfd, (struct sockaddr *) &addr, len)) {
-                        perror("bind()");
-                        goto fail;
-                    }
+            port = get_free_port();
+            if (port == -1)
+                exit(EXIT_FAILURE);
 
-                    if (getsockname(sfd, (struct sockaddr *) &addr, &len)) {
-                        perror("getsockname()");
-                        goto fail;
-                    }
+            printf("%d\n", port);
+            exit(EXIT_SUCCESS);
+        }
 
-                    port = ntohs(addr.sin_port);
 
-                fail:
-                    close(sfd);
-                    return port;
-                }
+        int32_t
+        get_free_port(void)
+        {
+            int                 sfd;
+            int32_t             port;
+            socklen_t           len;
+            struct sockaddr_in  addr;
+
+            sfd = socket(PF_INET, SOCK_STREAM, 0);
+            if (sfd == -1) {
+                perror("socket()");
+                return -1;
+            }
+
+            bzero(&addr, sizeof(addr));
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+            addr.sin_port = htons(0);  // random port
+
+            len = sizeof(addr);
+            if (bind(sfd, (struct sockaddr *) &addr, len)) {
+                perror("bind()");
+                goto fail;
+            }
+
+            if (getsockname(sfd, (struct sockaddr *) &addr, &len)) {
+                perror("getsockname()");
+                goto fail;
+            }
+
+            port = ntohs(addr.sin_port);
+
+        fail:
+            close(sfd);
+            return port;
+        }
 __EOF__
 
-            $freeport \
-            || err "Can't find an available port.";
-        ) \
-        | if read -r port; then
-            dry_run_echo 'Create a file to serve:';
-            dry_run_eval "mkdir -p $(dirname $www);";
-            dry_run_eval "echo 'Welcome to NGINX Unit!' >'$www';";
-            dry_run_echo;
-            dry_run_echo 'Give it appropriate permissions:';
-            dry_run_eval "chmod 644 '$www';";
-            dry_run_echo;
+    (
+        $freeport \
+        || err "Can't find an available port.";
+    ) \
+    | read -r port;
 
-            dry_run_echo 'Configure unitd:'
-            dry_run_eval "cat <<__EOF__ \\
-    | sed 's/8080/$port/' \\
-    | curl -X PUT -d@- $unix_socket 'http://$host/config/';
-    {
-        \"listeners\": {
-            \"*:8080\": {
-                \"pass\": \"routes\"
-            }
-        },
-        \"routes\": [{
-            \"action\": {
-                \"share\": \"$www\"
-            }
-        }]
-    }
+    dry_run_echo 'Create a file to serve:';
+    dry_run_eval "mkdir -p $(dirname $www);";
+    dry_run_eval "echo 'Welcome to NGINX Unit!' >'$www';";
+    dry_run_echo;
+    dry_run_echo 'Give it appropriate permissions:';
+    dry_run_eval "chmod 644 '$www';";
+    dry_run_echo;
+
+    dry_run_echo 'Configure unitd:'
+    dry_run_eval "cat <<__EOF__ \\
+        | sed 's/8080/$port/' \\
+        | curl -X PUT -d@- $unix_socket 'http://$host/config/';
+        {
+            \"listeners\": {
+                \"*:8080\": {
+                    \"pass\": \"routes\"
+                }
+            },
+            \"routes\": [{
+                \"action\": {
+                    \"share\": \"$www\"
+                }
+            }]
+        }
 __EOF__";
-            dry_run_echo;
 
-            echo
-            echo "You may want to try the following commands now:"
-            echo
-            echo "Read the current unitd configuration:"
-            echo "  sudo curl $unix_socket http://$host/config/"
-            echo
-            echo "Browse the welcome page:"
-            echo "  curl http://localhost:$port";
-        fi;
-    fi;
+    dry_run_echo;
+
+    echo
+    echo "You may want to try the following commands now:"
+    echo
+    echo "Read the current unitd configuration:"
+    echo "  sudo curl $unix_socket http://$host/config/"
+    echo
+    echo "Browse the welcome page:"
+    echo "  curl http://localhost:$port";
 }
 
 while test -v 1 && echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do

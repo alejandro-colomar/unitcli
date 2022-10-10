@@ -411,6 +411,10 @@ unitd_config()
         shift;
     done;
 
+    id -u \
+    | xargs test 0 -ne \
+    && err "This script requires root privileges to run."
+
     www="/srv/www/unit/index.html";
     test -e "$www" \
     && www="$(mktemp)";

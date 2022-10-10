@@ -585,7 +585,7 @@ __EOF__";
     fi;
 }
 
-while echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
+while test -v 1 && echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
     case $1 in
     -h | --help)
         print_help;
@@ -599,6 +599,11 @@ while echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
     shift;
 done;
 
+if test ! -v 1; then
+    >&2 print_help;
+    exit 1;
+fi;
+
 case $1 in
 welcome)
     shift;
@@ -607,5 +612,9 @@ welcome)
 repo-config)
     shift;
     repo_config $@;
+    ;;
+*)
+    >&2 print_help;
+    exit 1;
     ;;
 esac;

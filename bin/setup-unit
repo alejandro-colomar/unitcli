@@ -59,7 +59,7 @@ repo_config()
         echo;
         echo 'DESCRIPTION';
         echo '      This script will configure the repositories for NGINX Unit';
-        echo '      on Ubuntu, Debian, RedHat, CentOS, Oracle Linux, Amazon Linux, Fedora.';
+        echo '      on Ubuntu, Debian, Red Hat, CentOS, Oracle Linux, Amazon Linux, Fedora.';
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';
@@ -73,7 +73,7 @@ repo_config()
     # uname to find out if we are running on Linux or FreeBSD. For all the
     # supported versions of Debian and Ubuntu, we expect to find the
     # /etc/os-release file which has multiple lines with name-value pairs
-    # from which we can get the OS name and version. For RedHat and its
+    # from which we can get the OS name and version. For Red Hat and its
     # variants, the os-release file may or may not exist, depending on the
     # version.  If it doesn't, then we look for the release package and
     # get the OS and version from the package name. For FreeBSD, we use the
@@ -158,7 +158,7 @@ repo_config()
     installRedHat ()
     {
 
-        echoDebug "Install on RedHat/CentOS/Oracle"
+        echoDebug "Install on Red Hat/CentOS/Oracle"
 
         case "$osVersion" in
             6|6.*|7|7.*|8|8.*)

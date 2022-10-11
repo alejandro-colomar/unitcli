@@ -25,7 +25,7 @@ print_help()
     echo '      This script simplifies installing and configuring';
     echo '      an NGINX Unit server for first-time users.';
     echo;
-    echo '      Use the -h option with subcommands to see their help details.';
+    echo "      Run '$program_name SUBCOMMAND -h' for more information on a subcommand.";
     echo;
     echo 'SUBCOMMANDS';
     echo '      repo-config';

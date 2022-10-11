@@ -159,8 +159,8 @@ repo_config()
         dry_run_echo;
         dry_run_eval 'apt install -y apt-transport-https lsb-release ca-certificates;';
         dry_run_echo;
-        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n' '$(lsb_release -cs)' | tee /etc/apt/sources.list.d/unit.list;";
-        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n' '$(lsb_release -cs)' | tee -a /etc/apt/sources.list.d/unit.list;";
+        dry_run_eval 'printf "deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n" "$(lsb_release -cs)" | tee /etc/apt/sources.list.d/unit.list;';
+        dry_run_eval 'printf "deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n" "$(lsb_release -cs)" | tee -a /etc/apt/sources.list.d/unit.list;';
         dry_run_echo;
         dry_run_eval 'apt update;';
     }
@@ -173,8 +173,8 @@ repo_config()
         dry_run_echo;
         dry_run_eval 'apt install -y apt-transport-https lsb-release ca-certificates;';
         dry_run_echo;
-        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n' '$(lsb_release -cs)' | tee /etc/apt/sources.list.d/unit.list;";
-        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n' '$(lsb_release -cs)' | tee -a /etc/apt/sources.list.d/unit.list;";
+        dry_run_eval 'printf "deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n" "$(lsb_release -cs)" | tee /etc/apt/sources.list.d/unit.list;';
+        dry_run_eval 'printf "deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n" "$(lsb_release -cs)" | tee -a /etc/apt/sources.list.d/unit.list;';
         dry_run_echo;
         dry_run_eval 'apt update;';
     }

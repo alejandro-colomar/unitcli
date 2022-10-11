@@ -19,15 +19,15 @@ dry_run='no';
 print_help()
 {
     echo 'SYNOPSIS';
-    echo "      $program_name [-h] SUBCOMMAND [ARGS]";
+    echo "      $program_name [-h] COMMAND [ARGS]";
     echo;
     echo 'DESCRIPTION';
     echo '      This script simplifies installing and configuring';
     echo '      an NGINX Unit server for first-time users.';
     echo;
-    echo "      Run '$program_name SUBCOMMAND -h' for more information on a subcommand.";
+    echo "      Run '$program_name COMMAND -h' for more information on a command.";
     echo;
-    echo 'SUBCOMMANDS';
+    echo 'COMMANDS';
     echo '      repo-config';
     echo '              Configure your package manager with the NGINX Unit';
     echo '              repository for later installation';

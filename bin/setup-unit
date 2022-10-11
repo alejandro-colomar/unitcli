@@ -14,6 +14,8 @@ export LC_ALL=C
 
 program_name="$0";
 
+dry_run='no';
+
 print_help()
 {
     echo 'SYNOPSIS';
@@ -50,12 +52,28 @@ err()
     exit 1;
 }
 
+dry_run_echo()
+{
+    if test "$dry_run" = "yes"; then
+        echo "$*";
+    fi;
+}
+
+dry_run_eval()
+{
+    if test "$dry_run" = "yes"; then
+        echo "    $*";
+    else
+        eval "$*";
+    fi;
+}
+
 repo_config()
 {
     print_help_repo_config()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name repo-config [-h]";
+        echo "      $program_name repo-config [-hn]";
         echo;
         echo 'DESCRIPTION';
         echo '      This script will configure the repositories for NGINX Unit';
@@ -64,6 +82,12 @@ repo_config()
         echo 'OPTIONS';
         echo '      -h, --help';
         echo '              Print this help and exit.';
+        echo;
+        echo '      -n, --dry-run';
+        echo '              Dry run.  Print the commands that would be run,'
+        echo '              instead of actually running them.  They are';
+        echo '              preceeded by a line explaining what they do.';
+        echo '              This option is recommended for learning.';
     }
 
     #####################################################################
@@ -129,46 +153,46 @@ repo_config()
 
     installDebian ()
     {
-        echoDebug "Install on Debian"
-
-        curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg
-
-        apt install -y apt-transport-https lsb-release ca-certificates
-
-        printf "deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n" "$(lsb_release -cs)" | tee /etc/apt/sources.list.d/unit.list
-        printf "deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n" "$(lsb_release -cs)" | tee -a /etc/apt/sources.list.d/unit.list
-
-        apt update
+        dry_run_echo 'Install on Debian';
+        dry_run_echo;
+        dry_run_eval 'curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg;';
+        dry_run_echo;
+        dry_run_eval 'apt install -y apt-transport-https lsb-release ca-certificates;';
+        dry_run_echo;
+        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n' '$(lsb_release -cs)' | tee /etc/apt/sources.list.d/unit.list;";
+        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n' '$(lsb_release -cs)' | tee -a /etc/apt/sources.list.d/unit.list;";
+        dry_run_echo;
+        dry_run_eval 'apt update;';
     }
 
     installUbuntu ()
     {
-        echoDebug "Install on Ubuntu"
-
-        curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg
-
-        apt install -y apt-transport-https lsb-release ca-certificates
-
-        printf "deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n" "$(lsb_release -cs)" | tee /etc/apt/sources.list.d/unit.list
-        printf "deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n" "$(lsb_release -cs)" | tee -a /etc/apt/sources.list.d/unit.list
-
-        apt update
+        dry_run_echo 'Install on Ubuntu';
+        dry_run_echo;
+        dry_run_eval 'curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg;';
+        dry_run_echo;
+        dry_run_eval 'apt install -y apt-transport-https lsb-release ca-certificates;';
+        dry_run_echo;
+        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n' '$(lsb_release -cs)' | tee /etc/apt/sources.list.d/unit.list;";
+        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n' '$(lsb_release -cs)' | tee -a /etc/apt/sources.list.d/unit.list;";
+        dry_run_echo;
+        dry_run_eval 'apt update;';
     }
 
     installRedHat ()
     {
-
-        echoDebug "Install on Red Hat/CentOS/Oracle"
+        dry_run_echo 'Install on Red Hat/CentOS/Oracle';
+        dry_run_echo;
 
         case "$osVersion" in
             6|6.*|7|7.*|8|8.*)
-                cat << __EOF__ > /etc/yum.repos.d/unit.repo
+                dry_run_eval "cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
 baseurl=https://packages.nginx.org/unit/rhel/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
-__EOF__
+__EOF__";
                 ;;
             *)
                 echo "Unsupported $osName version: $osVersion"
@@ -176,52 +200,55 @@ __EOF__
                 ;;
         esac
 
-        yum makecache
+        dry_run_echo;
+        dry_run_eval 'yum makecache;';
     }
 
     installAmazon ()
     {
-
-        echoDebug "Install on Amazon"
+        dry_run_echo 'Install on Amazon';
+        dry_run_echo;
 
         case "$osVersion" in
             2)
-                cat << __EOF__ > /etc/yum.repos.d/unit.repo
+                dry_run_eval "cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
 baseurl=https://packages.nginx.org/unit/amzn2/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
-__EOF__
+__EOF__";
              ;;
             *)
-                cat << __EOF__ > /etc/yum.repos.d/unit.repo
+                dry_run_eval "cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
 baseurl=https://packages.nginx.org/unit/amzn/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
-__EOF__
+__EOF__";
              ;;
         esac
 
-        yum makecache
+        dry_run_echo;
+        dry_run_eval 'yum makecache;';
     }
 
     installFedora ()
     {
+        dry_run_echo 'Install on Fedora';
+        dry_run_echo;
 
-        echoDebug "Install on Fedora"
-
-        cat << __EOF__ > /etc/yum.repos.d/unit.repo
+        dry_run_eval "cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
 baseurl=https://packages.nginx.org/unit/fedora/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
-__EOF__
+__EOF__";
 
-        dnf makecache
+        dry_run_echo;
+        dry_run_eval 'dnf makecache;';
     }
 
     echoDebug ()
@@ -238,6 +265,9 @@ __EOF__
         -h | --help)
             print_help_repo_config;
             exit 0;
+            ;;
+        -n | --dry-run)
+            dry_run='yes';
             ;;
         -*)
             >&2 print_help_repo_config;
@@ -300,8 +330,6 @@ __EOF__
 
 unitd_config()
 {
-    dry_run='no';
-
     print_help_unitd_config()
     {
         echo 'SYNOPSIS';
@@ -320,22 +348,6 @@ unitd_config()
         echo '              instead of actually running them.  They are';
         echo '              preceeded by a line explaining what they do.';
         echo '              This option is recommended for learning.';
-    }
-
-    dry_run_echo()
-    {
-        if test "$dry_run" = "yes"; then
-            echo "$*";
-        fi;
-    }
-
-    dry_run_eval()
-    {
-        if test "$dry_run" = "yes"; then
-            echo "    $*";
-        else
-            eval "$*";
-        fi;
     }
 
     while test -v 1; do

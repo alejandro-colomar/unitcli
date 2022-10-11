@@ -22,22 +22,22 @@ print_help()
     echo "      $program_name [-h] SUBCOMMAND [ARGS]";
     echo;
     echo 'DESCRIPTION';
-    echo '      This program intends to make it easier for first-time users';
-    echo '      to install and configure an NGINX Unit server.';
+    echo '      This script simplifies installing and configuring';
+    echo '      an NGINX Unit server for first-time users.';
     echo;
-    echo '      Run the -h option of subcommands to read their help.';
+    echo '      Use the -h option with subcommands to see their help details.';
     echo;
     echo 'SUBCOMMANDS';
     echo '      repo-config';
-    echo '              Configure the package manager repository to later';
-    echo '              install NGINX Unit';
+    echo '              Configure your package manager with the NGINX Unit';
+    echo '              repository for later installation';
     echo;
-    echo '      welcome Configure a running instance of NGINX Unit with a';
-    echo '              basic configuration.';
+    echo '      welcome Set up a basic configuration on a running instance';
+    echo '              of NGINX Unit.';
     echo;
     echo 'OPTIONS';
     echo '      -h, --help';
-    echo '              Print this help and exit.';
+    echo '              Print this help.';
     echo;
 }
 
@@ -76,18 +76,17 @@ repo_config()
         echo "      $program_name repo-config [-hn]";
         echo;
         echo 'DESCRIPTION';
-        echo '      This script will configure the repositories for NGINX Unit';
-        echo '      on Ubuntu, Debian, Red Hat, CentOS, Oracle Linux, Amazon Linux, Fedora.';
+        echo '      This script configures the NGINX Unit repository';
+        echo '      on Amazon Linux, CentOS, Debian, Fedora, Oracle Linux, Red Hat, or Ubuntu.';
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';
-        echo '              Print this help and exit.';
+        echo '              Print this help.';
         echo;
         echo '      -n, --dry-run';
-        echo '              Dry run.  Print the commands that would be run,'
-        echo '              instead of actually running them.  They are';
-        echo '              preceeded by a line explaining what they do.';
-        echo '              This option is recommended for learning.';
+        echo '              Dry run.  Print the commands to be run instead'
+        echo '              of actually running them.  Each command is';
+        echo '              preceded by a line explaining what it does.';
     }
 
     #####################################################################
@@ -113,8 +112,8 @@ repo_config()
         os=$(uname | tr '[:upper:]' '[:lower:]')
 
         if [ "$os" != "linux" ] && [ "$os" != "freebsd" ]; then
-            warn "Error: Operating system is not Linux or FreeBSD, can't proceed"
-            err  "On macOS, try 'brew install nginx/unit/unit'"
+            warn "Error: The OS isn't Linux or FreeBSD, can't proceed."
+            err  "On macOS, try 'brew install nginx/unit/unit'."
         fi
 
         if [ "$os" = "linux" ]; then
@@ -133,7 +132,7 @@ repo_config()
                     osName=centos
                     osVersion=$(rpm -q centos-release | sed 's/centos-release-//' | sed 's/\..*//' | awk -F- '{print $1"."$2;}')
                 else
-                    err "Error: Unable to determine the operating system and version, or the OS is not supported"
+                    err "Error: Unable to determine OS and version, or the OS isn't supported"
                 fi
             fi
         else
@@ -287,7 +286,7 @@ __EOF__";
     | xargs test 0 -ne \
     && err "This script requires root privileges to run."
 
-    echo "This script will setup repositories for NGINX Unit"
+    echo "This script sets up the NGINX Unit repository"
 
     osNameVersion=$(getOS)
     os=$(echo "$osNameVersion" | awk -F: '{print $1}')
@@ -318,12 +317,12 @@ __EOF__";
         installFedora
         ;;
     *)
-        err "$osName is not supported"
+        err "$osName isn't supported"
         ;;
     esac
 
     echo
-    echo "All done - NGINX Unit repositories for "$osName" "$osVersion" are set up"
+    echo "All done; the NGINX Unit repository for "$osName" "$osVersion" is set up."
     echo "Further steps: https://unit.nginx.org/installation/#official-packages"
 }
 
@@ -336,18 +335,17 @@ unitd_config()
         echo "      $program_name welcome [-hn]";
         echo;
         echo 'DESCRIPTION';
-        echo '      This command intends to make it easier for first-time';
-        echo '      users to configure a running NGINX Unit server.';
+        echo '      This script simplifies configuring a running';
+        echo '      NGINX Unit instance for first-time users.';
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';
-        echo '              Print this help and exit.';
+        echo '              Print this help.';
         echo;
         echo '      -n, --dry-run';
-        echo '              Dry run.  Print the commands that would be run,'
-        echo '              instead of actually running them.  They are';
-        echo '              preceeded by a line explaining what they do.';
-        echo '              This option is recommended for learning.';
+        echo '              Dry run.  Print the commands to be run instead'
+        echo '              of actually running them.  Each command is';
+        echo '              preceded by a line explaining what it does.';
     }
 
     while test -v 1; do
@@ -389,10 +387,10 @@ unitd_config()
     ||:
 
     test 0 -eq "$nprocs" \
-    && err 'Unit is not running.';
+    && err "NGINX Unit isn't running.";
 
     test 1 -ne "$nprocs" \
-    && err 'There should be only one instance of Unit running.';
+    && err "Only one NGINX Unit instance should be running.";
 
     ps ax \
     | grep 'unit: main' \
@@ -415,7 +413,7 @@ unitd_config()
     fi \
     | sed 's,$,/conf.json,' \
     | xargs test -e \
-    && err 'Unit is already configured.'
+    && err 'NGINX Unit is already configured.'
 
     echo "$cmd" \
     | if grep '\--control' >/dev/null; then
@@ -440,7 +438,7 @@ unitd_config()
     fi;
 
     curl $unix_socket "http://$host/config/" >/dev/null 2>&1 \
-    || err "Can't connect to control socket.";
+    || err "Can't reach the control socket.";
 
     freeport="$(mktemp -t freeport-XXXXXX)";
 
@@ -548,7 +546,7 @@ __EOF__";
     echo
     echo "You may want to try the following commands now:"
     echo
-    echo "Read the current unitd configuration:"
+    echo "Check out current unitd configuration:"
     echo "  sudo curl $unix_socket http://$host/config/"
     echo
     echo "Browse the welcome page:"

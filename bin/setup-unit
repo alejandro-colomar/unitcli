@@ -467,6 +467,8 @@ unitd_config()
             socklen_t           len;
             struct sockaddr_in  addr;
 
+            port = -1;
+
             sfd = socket(PF_INET, SOCK_STREAM, 0);
             if (sfd == -1) {
                 perror("socket()");

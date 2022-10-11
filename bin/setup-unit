@@ -5,15 +5,10 @@
 # Copyright (C) NGINX, Inc.
 #
 # Author:  NGINX Unit Team, F5 Inc.
-# Version: 0.0.1
-# Date:    2022-05-05
 #
 # This script will configure the repositories for NGINX Unit on Ubuntu,
 # Debian, RedHat, CentOS, Oracle Linux, Amazon Linux, Fedora.
 # It must be run as root.
-#
-# Note: curl and awk are required by this script, so the script checks to make
-# sure they are installed.
 #
 #####################################################################
 
@@ -79,10 +74,6 @@ repo_config()
     #    OS
     #    OS Name
     #    OS Version
-    #
-    # If none of these files was found, an empty string is written.
-    #
-    # Return: 0 for success, 1 for error
     #####################################################################
     getOS ()
     {

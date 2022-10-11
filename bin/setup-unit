@@ -233,15 +233,18 @@ __EOF__
 
     debug=0 # If set to 1, debug message will be displayed
 
-    while test -v 1 && echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
-        case $1 in
+    while test -v 1; do
+        case "$1" in
         -h | --help)
             print_help_repo_config;
             exit 0;
             ;;
-        *)
+        -*)
             >&2 print_help_repo_config;
             exit 1;
+            ;;
+        *)
+            break;
             ;;
         esac;
         shift;
@@ -335,8 +338,8 @@ unitd_config()
         fi;
     }
 
-    while test -v 1 && echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
-        case $1 in
+    while test -v 1; do
+        case "$1" in
         -h | --help)
             print_help_unitd_config;
             exit 0;
@@ -344,9 +347,12 @@ unitd_config()
         -n | --dry-run)
             dry_run='yes';
             ;;
-        *)
+        -*)
             >&2 print_help_unitd_config;
             exit 1;
+            ;;
+        *)
+            break;
             ;;
         esac;
         shift;
@@ -535,15 +541,18 @@ __EOF__";
     echo "  curl http://localhost:$port";
 }
 
-while test -v 1 && echo "_$1" | sed 's/^_//' | grep '^-' >/dev/null; do
-    case $1 in
+while test -v 1; do
+    case "$1" in
     -h | --help)
         print_help;
         exit 0;
         ;;
-    *)
+    -*)
         >&2 print_help;
         exit 1;
+        ;;
+    *)
+        break;
         ;;
     esac;
     shift;

@@ -28,15 +28,14 @@ print_help()
     echo "      Run '$program_name COMMAND -h' for more information on a command.";
     echo;
     echo 'COMMANDS';
+    echo '      ctl     Control a running unitd(8) instance through its control socket.';
+    echo;
     echo '      freeport';
     echo '              Print an available TCP port.';
     echo;
     echo '      repo-config';
     echo '              Configure your package manager with the NGINX Unit';
     echo '              repository for later installation';
-    echo;
-    echo '      welcome Set up a basic configuration on a running instance';
-    echo '              of NGINX Unit.';
     echo;
     echo 'OPTIONS';
     echo '      -h, --help';
@@ -435,12 +434,76 @@ __EOF__
 }
 
 
-unitd_config()
+unit_ctl()
 {
-    print_help_unitd_config()
+    print_help_unit_ctl()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name welcome [-hn]";
+        echo "      $program_name ctl [-h] SUBCOMMAND [ARGS]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Control a running unitd(8) instance through its control';
+        echo '      socket.';
+        echo;
+        echo "      Run '$program_name ctl SUBCOMMAND -h' for more information";
+        echo '      on a subcommand.';
+        echo;
+        echo 'SUBCOMMANDS';
+        #echo '      sock    Print the address of the control socket.';
+        #echo;
+        echo '      welcome Set up a basic configuration on a running instance';
+        echo '              of NGINX Unit.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            print_help_unit_ctl;
+            exit 0;
+            ;;
+        -*)
+            >&2 print_help_unit_ctl;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    if test ! -v 1; then
+        >&2 print_help_unit_ctl;
+        exit 1;
+    fi;
+
+    case $1 in
+    #sock)
+        #shift;
+        #unit_ctl_sock $@;
+        #;;
+    welcome)
+        shift;
+        unit_ctl_welcome $@;
+        ;;
+    *)
+        >&2 print_help;
+        exit 1;
+        ;;
+    esac;
+}
+
+
+unit_ctl_welcome()
+{
+    print_help_unit_ctl_welcome()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl welcome [-hn]";
         echo;
         echo 'DESCRIPTION';
         echo '      This script simplifies configuring a running';
@@ -459,14 +522,14 @@ unitd_config()
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unitd_config;
+            print_help_unit_ctl_welcome;
             exit 0;
             ;;
         -n | --dry-run)
             dry_run='yes';
             ;;
         -*)
-            >&2 print_help_unitd_config;
+            >&2 print_help_unit_ctl_welcome;
             exit 1;
             ;;
         *)
@@ -615,13 +678,13 @@ if test ! -v 1; then
 fi;
 
 case $1 in
+ctl)
+    shift;
+    unit_ctl $@;
+    ;;
 freeport)
     shift;
     unit_freeport $@;
-    ;;
-welcome)
-    shift;
-    unitd_config $@;
     ;;
 repo-config)
     shift;

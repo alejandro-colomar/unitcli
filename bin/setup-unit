@@ -28,6 +28,9 @@ print_help()
     echo "      Run '$program_name COMMAND -h' for more information on a command.";
     echo;
     echo 'COMMANDS';
+    echo '      freeport';
+    echo '              Print an available TCP port.';
+    echo;
     echo '      repo-config';
     echo '              Configure your package manager with the NGINX Unit';
     echo '              repository for later installation';
@@ -327,6 +330,111 @@ __EOF__";
 }
 
 
+unit_freeport()
+{
+    print_help_unit_freeport()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name freeport [-h]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Print an available TCP port.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            print_help_unit_freeport;
+            exit 0;
+            ;;
+        -*)
+            >&2 print_help_unit_freeport;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    freeport="$(mktemp -t freeport-XXXXXX)";
+
+    cat <<__EOF__ \
+    | cc -x c -o $freeport -;
+        #include <netinet/in.h>
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include <strings.h>
+        #include <sys/socket.h>
+        #include <unistd.h>
+
+
+        int32_t get_free_port(void);
+
+
+        int
+        main(void)
+        {
+            int32_t  port;
+
+            port = get_free_port();
+            if (port == -1)
+                exit(EXIT_FAILURE);
+
+            printf("%d\n", port);
+            exit(EXIT_SUCCESS);
+        }
+
+
+        int32_t
+        get_free_port(void)
+        {
+            int                 sfd;
+            int32_t             port;
+            socklen_t           len;
+            struct sockaddr_in  addr;
+
+            port = -1;
+
+            sfd = socket(PF_INET, SOCK_STREAM, 0);
+            if (sfd == -1) {
+                perror("socket()");
+                return -1;
+            }
+
+            bzero(&addr, sizeof(addr));
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+            addr.sin_port = htons(0);  // random port
+
+            len = sizeof(addr);
+            if (bind(sfd, (struct sockaddr *) &addr, len)) {
+                perror("bind()");
+                goto fail;
+            }
+
+            if (getsockname(sfd, (struct sockaddr *) &addr, &len)) {
+                perror("getsockname()");
+                goto fail;
+            }
+
+            port = ntohs(addr.sin_port);
+
+        fail:
+            close(sfd);
+            return port;
+        }
+__EOF__
+
+    $freeport;
+}
+
+
 unitd_config()
 {
     print_help_unitd_config()
@@ -440,77 +548,8 @@ unitd_config()
     curl $unix_socket "http://$host/config/" >/dev/null 2>&1 \
     || err "Can't reach the control socket.";
 
-    freeport="$(mktemp -t freeport-XXXXXX)";
-
-    cat <<__EOF__ \
-    | cc -x c -o $freeport -;
-        #include <netinet/in.h>
-        #include <stdio.h>
-        #include <stdlib.h>
-        #include <strings.h>
-        #include <sys/socket.h>
-        #include <unistd.h>
-
-
-        int32_t get_free_port(void);
-
-
-        int
-        main(void)
-        {
-            int32_t  port;
-
-            port = get_free_port();
-            if (port == -1)
-                exit(EXIT_FAILURE);
-
-            printf("%d\n", port);
-            exit(EXIT_SUCCESS);
-        }
-
-
-        int32_t
-        get_free_port(void)
-        {
-            int                 sfd;
-            int32_t             port;
-            socklen_t           len;
-            struct sockaddr_in  addr;
-
-            port = -1;
-
-            sfd = socket(PF_INET, SOCK_STREAM, 0);
-            if (sfd == -1) {
-                perror("socket()");
-                return -1;
-            }
-
-            bzero(&addr, sizeof(addr));
-            addr.sin_family = AF_INET;
-            addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-            addr.sin_port = htons(0);  // random port
-
-            len = sizeof(addr);
-            if (bind(sfd, (struct sockaddr *) &addr, len)) {
-                perror("bind()");
-                goto fail;
-            }
-
-            if (getsockname(sfd, (struct sockaddr *) &addr, &len)) {
-                perror("getsockname()");
-                goto fail;
-            }
-
-            port = ntohs(addr.sin_port);
-
-        fail:
-            close(sfd);
-            return port;
-        }
-__EOF__
-
     (
-        $freeport \
+        unit_freeport \
         || err "Can't find an available port.";
     ) \
     | read -r port;
@@ -576,6 +615,10 @@ if test ! -v 1; then
 fi;
 
 case $1 in
+freeport)
+    shift;
+    unit_freeport $@;
+    ;;
 welcome)
     shift;
     unitd_config $@;

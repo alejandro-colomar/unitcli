@@ -571,7 +571,7 @@ unit_ctl_sock()
         host="$control";
     fi;
 
-    echo "$unix_socket http://$host/config/";
+    echo "$unix_socket http://$host";
 }
 
 
@@ -648,7 +648,7 @@ unit_ctl_welcome()
 
     local curl_opt="$(unit_ctl_sock -c)";
 
-    curl $curl_opt >/dev/null 2>&1 \
+    curl $curl_opt/ >/dev/null 2>&1 \
     || err "Can't reach the control socket.";
 
     (
@@ -668,7 +668,7 @@ unit_ctl_welcome()
     dry_run_echo 'Configure unitd:'
     dry_run_eval "cat <<__EOF__ \\
         | sed 's/8080/$port/' \\
-        | curl -X PUT -d@- $curl_opt;
+        | curl -X PUT -d@- $curl_opt/config/;
         {
             \"listeners\": {
                 \"*:8080\": {

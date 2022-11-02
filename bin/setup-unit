@@ -33,6 +33,8 @@ print_help()
     echo '      freeport';
     echo '              Print an available TCP port.';
     echo;
+    echo '      ps      List unitd(8) processes.';
+    echo;
     echo '      repo-config';
     echo '              Configure your package manager with the NGINX Unit';
     echo '              repository for later installation';
@@ -694,11 +696,77 @@ __EOF__";
 }
 
 
+unit_ps()
+{
+    print_help_unit_ps()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ps [-h] [-t TYPE]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      List unitd(8) processes.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+        echo;
+        echo '      -t, --type TYPE';
+        echo '              List only processes of type TYPE.  The available';
+        echo '              types are:';
+        echo;
+        echo '              -  controller (c)';
+        echo '              -  main (m)';
+        echo '              -  router (r)';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            print_help_unit_ps;
+            exit 0;
+            ;;
+        -t | --type)
+            local type=;
+            case "$2" in
+            c | controller)
+                local type_c='c';
+                ;;
+            m | main)
+                local type_m='m';
+                ;;
+            r | router)
+                local type_r='r';
+                ;;
+            esac;
+            shift;
+            ;;
+        -*)
+            >&2 print_help_unit_ps;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    ps ax \
+    | if test -v type; then
+        grep ${type_c:+-e 'unit: controller'} \
+             ${type_m:+-e 'unit: main'} \
+             ${type_r:+-e 'unit: router'};
+    else
+        grep 'unit: ';
+    fi \
+    | grep -v grep \
+    ||:
+}
+
+
 unit_cmd()
 {
-    ps ax \
-    | grep 'unit: main' \
-    | grep -v grep \
+    unit_ps -t m \
     | wc -l \
     | read -r nprocs \
     ||:
@@ -709,9 +777,7 @@ unit_cmd()
     test 1 -ne "$nprocs" \
     && err "Only one NGINX Unit instance should be running.";
 
-    ps ax \
-    | grep 'unit: main' \
-    | grep -v grep \
+    unit_ps -t m \
     | sed 's/.*\[\(.*\)].*/\1/';
 }
 
@@ -746,6 +812,10 @@ ctl)
 freeport)
     shift;
     unit_freeport $@;
+    ;;
+ps)
+    shift;
+    unit_ps $@;
     ;;
 repo-config)
     shift;

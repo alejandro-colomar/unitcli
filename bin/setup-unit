@@ -449,8 +449,8 @@ unit_ctl()
         echo '      on a subcommand.';
         echo;
         echo 'SUBCOMMANDS';
-        #echo '      sock    Print the address of the control socket.';
-        #echo;
+        echo '      sock    Print the address of the control socket.';
+        echo;
         echo '      welcome Set up a basic configuration on a running instance';
         echo '              of NGINX Unit.';
         echo;
@@ -482,10 +482,10 @@ unit_ctl()
     fi;
 
     case $1 in
-    #sock)
-        #shift;
-        #unit_ctl_sock $@;
-        #;;
+    sock)
+        shift;
+        unit_ctl_sock $@;
+        ;;
     welcome)
         shift;
         unit_ctl_welcome $@;
@@ -495,6 +495,98 @@ unit_ctl()
         exit 1;
         ;;
     esac;
+}
+
+
+unit_ctl_sock()
+{
+    print_help_unit_ctl_sock()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl sock [-ch]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Print the address of the control socket.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -c, --curl';
+        echo '              Print an argument suitable for curl(1).';
+        echo;
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -c | --curl)
+            local curl_opt='yes';
+            ;;
+        -h | --help)
+            print_help_unit_ctl_sock;
+            exit 0;
+            ;;
+        -*)
+            >&2 print_help_unit_ctl_sock;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    id -u \
+    | xargs test 0 -ne \
+    && err "This script requires root privileges to run."
+
+    ps ax \
+    | grep 'unit: main' \
+    | grep -v grep \
+    | wc -l \
+    | read -r nprocs \
+    ||:
+
+    test 0 -eq "$nprocs" \
+    && err "NGINX Unit isn't running.";
+
+    test 1 -ne "$nprocs" \
+    && err "Only one NGINX Unit instance should be running.";
+
+    ps ax \
+    | grep 'unit: main' \
+    | grep -v grep \
+    | sed 's/.*\[\(.*\)].*/\1/' \
+    | read -r cmd;
+
+    echo "$cmd" \
+    | if grep '\--control' >/dev/null; then
+        echo "$cmd" \
+        | sed 's/ --/\n--/g' \
+        | grep '\--control' \
+        | cut -d' ' -f2;
+    else
+        $cmd --help \
+        | sed -n '/\--control/,+1p' \
+        | grep 'default:' \
+        | sed 's/ *default: "\(.*\)"/\1/';
+    fi \
+    | read -r control;
+
+    if ! test -v curl_opt; then
+        echo "$control";
+        return 0;
+    fi;
+
+    if echo "$control" | grep '^unix:' >/dev/null; then
+        unix_socket="$(echo "$control" | sed 's/unix:/--unix-socket /')";
+        host='localhost';
+    else
+        unix_socket='';
+        host="$control";
+    fi;
+
+    echo "$unix_socket http://$host/config/";
 }
 
 
@@ -586,29 +678,9 @@ unit_ctl_welcome()
     | xargs test -e \
     && err 'NGINX Unit is already configured.'
 
-    echo "$cmd" \
-    | if grep '\--control' >/dev/null; then
-        echo "$cmd" \
-        | sed 's/ --/\n--/g' \
-        | grep '\--control' \
-        | cut -d' ' -f2;
-    else
-        $cmd --help \
-        | sed -n '/\--control/,+1p' \
-        | grep 'default:' \
-        | sed 's/ *default: "\(.*\)"/\1/';
-    fi \
-    | read -r control;
+    local curl_opt="$(unit_ctl_sock -c)";
 
-    if echo "$control" | grep '^unix:' >/dev/null; then
-        unix_socket="$(echo "$control" | sed 's/unix:/ --unix-socket /')";
-        host='localhost';
-    else
-        unix_socket='';
-        host="$control";
-    fi;
-
-    curl $unix_socket "http://$host/config/" >/dev/null 2>&1 \
+    curl $curl_opt >/dev/null 2>&1 \
     || err "Can't reach the control socket.";
 
     (
@@ -628,7 +700,7 @@ unit_ctl_welcome()
     dry_run_echo 'Configure unitd:'
     dry_run_eval "cat <<__EOF__ \\
         | sed 's/8080/$port/' \\
-        | curl -X PUT -d@- $unix_socket 'http://$host/config/';
+        | curl -X PUT -d@- $curl_opt;
         {
             \"listeners\": {
                 \"*:8080\": {
@@ -649,11 +721,12 @@ __EOF__";
     echo "You may want to try the following commands now:"
     echo
     echo "Check out current unitd configuration:"
-    echo "    curl $unix_socket http://$host/config/"
+    echo "    curl $curl_opt"
     echo
     echo "Browse the welcome page:"
     echo "    curl http://localhost:$port";
 }
+
 
 while test -v 1; do
     case "$1" in

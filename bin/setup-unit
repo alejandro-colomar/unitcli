@@ -540,24 +540,7 @@ unit_ctl_sock()
     | xargs test 0 -ne \
     && err "This script requires root privileges to run."
 
-    ps ax \
-    | grep 'unit: main' \
-    | grep -v grep \
-    | wc -l \
-    | read -r nprocs \
-    ||:
-
-    test 0 -eq "$nprocs" \
-    && err "NGINX Unit isn't running.";
-
-    test 1 -ne "$nprocs" \
-    && err "Only one NGINX Unit instance should be running.";
-
-    ps ax \
-    | grep 'unit: main' \
-    | grep -v grep \
-    | sed 's/.*\[\(.*\)].*/\1/' \
-    | read -r cmd;
+    local cmd="$(unit_cmd)";
 
     echo "$cmd" \
     | if grep '\--control' >/dev/null; then
@@ -642,24 +625,7 @@ unit_ctl_welcome()
     test -e "$www" \
     && www="$(mktemp)";
 
-    ps ax \
-    | grep 'unit: main' \
-    | grep -v grep \
-    | wc -l \
-    | read -r nprocs \
-    ||:
-
-    test 0 -eq "$nprocs" \
-    && err "NGINX Unit isn't running.";
-
-    test 1 -ne "$nprocs" \
-    && err "Only one NGINX Unit instance should be running.";
-
-    ps ax \
-    | grep 'unit: main' \
-    | grep -v grep \
-    | sed 's/.*\[\(.*\)].*/\1/' \
-    | read -r cmd;
+    local cmd="$(unit_cmd)";
 
     # Check unitd is not configured already.
     echo "$cmd" \
@@ -725,6 +691,28 @@ __EOF__";
     echo
     echo "Browse the welcome page:"
     echo "    curl http://localhost:$port";
+}
+
+
+unit_cmd()
+{
+    ps ax \
+    | grep 'unit: main' \
+    | grep -v grep \
+    | wc -l \
+    | read -r nprocs \
+    ||:
+
+    test 0 -eq "$nprocs" \
+    && err "NGINX Unit isn't running.";
+
+    test 1 -ne "$nprocs" \
+    && err "Only one NGINX Unit instance should be running.";
+
+    ps ax \
+    | grep 'unit: main' \
+    | grep -v grep \
+    | sed 's/.*\[\(.*\)].*/\1/';
 }
 
 

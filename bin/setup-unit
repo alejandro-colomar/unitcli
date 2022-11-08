@@ -453,6 +453,9 @@ unit_ctl()
         echo 'SUBCOMMANDS';
         echo '      http    Send an HTTP request to the control socket.';
         echo;
+        echo '      insert  Insert an element into a specified index in an array';
+        echo '              in the JSON configuration.';
+        echo;
         echo '      sock    Print the address of the control socket.';
         echo;
         echo '      welcome Set up a basic configuration on a running instance';
@@ -489,6 +492,10 @@ unit_ctl()
     http)
         shift;
         unit_ctl_http $@;
+        ;;
+    insert)
+        shift;
+        unit_ctl_insert $@;
         ;;
     sock)
         shift;
@@ -575,6 +582,68 @@ unit_ctl_sock()
     fi;
 
     echo "$unix_socket http://$host";
+}
+
+
+unit_ctl_insert()
+{
+    print_help_unit_ctl_insert()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl insert [-h] PATH INDEX";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Insert an element into a specified position (INDEX) in the';
+        echo '      JSON array in the unitd(8) configuration API at PATH.';
+        echo;
+        echo '      The new element is read from standard input.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            print_help_unit_ctl_insert;
+            exit 0;
+            ;;
+        -n | --dry-run)
+            dry_run='yes';
+            ;;
+        -*)
+            >&2 print_help_unit_ctl_insert;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    if test ! -v 2; then
+        >&2 print_help_unit_ctl_insert;
+        exit 1;
+    fi;
+
+    local path="$1";
+    local idx="$2";
+
+    local old="$(mktemp)";
+    local old="$(mktemp)";
+    local elem="$(mktemp)";
+
+    unit_ctl_sock -c \
+    | read -r curl_opt;
+
+    curl -X GET ${curl_opt}${path} >"$old" 2>/dev/null;
+
+    cat >"$elem";
+
+    unit_jq_insert "$old" "$elem" "$idx" \
+    | unit_ctl_http PUT "$path";
 }
 
 
@@ -840,6 +909,25 @@ unit_cmd()
 
     unit_ps -t m \
     | sed 's/.*\[\(.*\)].*/\1/';
+}
+
+
+unit_jq_insert()
+{
+    local arr=$1;
+    local elem=$2;
+    local idx=$3;
+
+    (
+        jq ".[0:$idx]" <"$arr";
+        echo '[';
+        jq . <"$elem";
+        echo ']';
+        jq ".[$idx:]" <"$arr";
+    ) \
+    | sed '/^\[]$/d' \
+    | sed '/^]$/{N;s/^]\n\[$/,/}' \
+    | jq .;
 }
 
 

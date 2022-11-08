@@ -544,7 +544,8 @@ unit_ctl_sock()
         shift;
     done;
 
-    local cmd="$(unit_cmd)";
+    unit_cmd \
+    | read -r cmd;
 
     echo "$cmd" \
     | if grep '\--control' >/dev/null; then
@@ -626,7 +627,10 @@ unit_ctl_http()
     local method="$1";
     local path="$2";
 
-    dry_run_eval "curl -X $method -d@- $(unit_ctl_sock -c)${path};";
+    unit_ctl_sock -c \
+    | read -r curl_opt;
+
+    dry_run_eval "curl -X $method -d@- ${curl_opt}${path};";
 }
 
 
@@ -682,7 +686,8 @@ unit_ctl_welcome()
     test -e "$www" \
     && www="$(mktemp)";
 
-    local cmd="$(unit_cmd)";
+    unit_cmd \
+    | read -r cmd;
 
     # Check unitd is not configured already.
     echo "$cmd" \
@@ -701,7 +706,8 @@ unit_ctl_welcome()
     | xargs test -e \
     && err 'NGINX Unit is already configured.'
 
-    local curl_opt="$(unit_ctl_sock -c)";
+    unit_ctl_sock -c \
+    | read -r curl_opt;
 
     curl $curl_opt/ >/dev/null 2>&1 \
     || err "Can't reach the control socket.";

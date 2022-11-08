@@ -451,6 +451,8 @@ unit_ctl()
         echo '      on a subcommand.';
         echo;
         echo 'SUBCOMMANDS';
+        echo '      http    Send an HTTP request to the control socket.';
+        echo;
         echo '      sock    Print the address of the control socket.';
         echo;
         echo '      welcome Set up a basic configuration on a running instance';
@@ -484,6 +486,10 @@ unit_ctl()
     fi;
 
     case $1 in
+    http)
+        shift;
+        unit_ctl_http $@;
+        ;;
     sock)
         shift;
         unit_ctl_sock $@;
@@ -568,6 +574,59 @@ unit_ctl_sock()
     fi;
 
     echo "$unix_socket http://$host";
+}
+
+
+unit_ctl_http()
+{
+    print_help_unit_ctl_http()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl http [-hn] METHOD PATH";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Send an HTTP request to the unitd(8) control socket.';
+        echo;
+        echo '      The payload is read from standard input.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+        echo;
+        echo '      -n, --dry-run';
+        echo '              Dry run.  Print the command to be run instead'
+        echo '              of actually running it.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            print_help_unit_ctl_http;
+            exit 0;
+            ;;
+        -n | --dry-run)
+            dry_run='yes';
+            ;;
+        -*)
+            >&2 print_help_unit_ctl_http;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    if test ! -v 2; then
+        >&2 print_help_unit_ctl_http;
+        exit 1;
+    fi;
+
+    local method="$1";
+    local path="$2";
+
+    dry_run_eval "curl -X $method -d@- $(unit_ctl_sock -c)${path};";
 }
 
 

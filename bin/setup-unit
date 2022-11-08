@@ -538,10 +538,6 @@ unit_ctl_sock()
         shift;
     done;
 
-    id -u \
-    | xargs test 0 -ne \
-    && err "This script requires root privileges to run."
-
     local cmd="$(unit_cmd)";
 
     echo "$cmd" \

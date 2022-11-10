@@ -47,12 +47,12 @@ print_help()
 
 warn()
 {
-    >&2 echo "$*";
+    >&2 echo "unit: error: $*";
 }
 
 err()
 {
-    >&2 echo "$*";
+    >&2 echo "unit: error: $*";
     exit 1;
 }
 
@@ -116,7 +116,7 @@ repo_config()
         os=$(uname | tr '[:upper:]' '[:lower:]')
 
         if [ "$os" != 'linux' ] && [ "$os" != 'freebsd' ]; then
-            warn "Error: The OS isn't Linux or FreeBSD, can't proceed."
+            warn "The OS isn't Linux or FreeBSD, can't proceed."
             err  "On macOS, try 'brew install nginx/unit/unit'."
         fi
 
@@ -136,7 +136,7 @@ repo_config()
                     osName=centos
                     osVersion=$(rpm -q centos-release | sed 's/centos-release-//' | sed 's/\..*//' | awk -F- '{print $1"."$2;}')
                 else
-                    err "Error: Unable to determine OS and version, or the OS isn't supported"
+                    err "Unable to determine OS and version, or the OS isn't supported"
                 fi
             fi
         else
@@ -198,8 +198,7 @@ enabled=1
 __EOF__';
                 ;;
             *)
-                echo "Unsupported $osName version: $osVersion"
-                exit 1
+                err "Unsupported $osName version: $osVersion"
                 ;;
         esac
 
@@ -284,7 +283,7 @@ __EOF__';
     done;
 
     command -v curl >/dev/null \
-    || err 'Error: curl not found in PATH.  It must be installed to run this script.';
+    || err 'curl(1) not found in PATH.  It must be installed to run this script.';
 
     id -u \
     | xargs test 0 -ne \
@@ -749,7 +748,7 @@ unit_ctl_welcome()
     && err 'This script requires root privileges to run.';
 
     command -v curl >/dev/null \
-    || err 'Error: curl not found in PATH.  It must be installed to run this script.';
+    || err 'curl(1) not found in PATH.  It must be installed to run this script.';
 
     www='/srv/www/unit/index.html';
     test -e "$www" \

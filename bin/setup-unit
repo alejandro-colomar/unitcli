@@ -631,17 +631,13 @@ unit_ctl_insert()
     local idx="$2";
 
     local old="$(mktemp)";
-    local old="$(mktemp)";
-    local elem="$(mktemp)";
 
     unit_ctl_sock -c \
     | read -r curl_opt;
 
     curl -X GET ${curl_opt}${path} >"$old" 2>/dev/null;
 
-    cat >"$elem";
-
-    unit_jq_insert "$old" "$elem" "$idx" \
+    unit_jq_insert "$old" "$idx" \
     | unit_ctl_http PUT "$path";
 }
 
@@ -914,13 +910,12 @@ unit_cmd()
 unit_jq_insert()
 {
     local arr=$1;
-    local elem=$2;
-    local idx=$3;
+    local idx=$2;
 
     (
         jq ".[0:$idx]" <"$arr";
         echo '[';
-        jq . <"$elem";
+        jq .;
         echo ']';
         jq ".[$idx:]" <"$arr";
     ) \

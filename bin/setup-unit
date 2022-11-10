@@ -33,6 +33,10 @@ print_help()
     echo '      freeport';
     echo '              Print an available TCP port.';
     echo;
+    echo '      json-ins';
+    echo '              Insert a JSON element read from standard input into a JSON';
+    echo '              array read from a file at a given INDEX.';
+    echo;
     echo '      ps      List unitd(8) processes.';
     echo;
     echo '      repo-config';
@@ -637,7 +641,7 @@ unit_ctl_insert()
 
     curl -X GET ${curl_opt}${path} >"$old" 2>/dev/null;
 
-    unit_jq_insert "$old" "$idx" \
+    unit_json_ins "$old" "$idx" \
     | unit_ctl_http PUT "$path";
 }
 
@@ -907,21 +911,71 @@ unit_cmd()
 }
 
 
-unit_jq_insert()
+unit_json_ins()
 {
+    print_help_unit_json_ins()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name json-ins [-hn] JSON INDEX";
+        echo;
+        echo 'ARGUMENTS';
+        echo '      JSON    Path to a JSON file containing a top-level array.';
+        echo;
+        echo '      INDEX   Position in the array where to insert the element.';
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Insert a JSON element read from standard input into a JSON';
+        echo '      array read from a file at a given INDEX.';
+        echo;
+        echo '      The resulting array is printed to standard output.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+        echo;
+        echo '      -n, --dry-run';
+        echo '              Dry run.  Print the command to be run instead';
+        echo '              of actually running it.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            print_help_unit_json_ins;
+            exit 0;
+            ;;
+        -n | --dry-run)
+            dry_run='yes';
+            ;;
+        -*)
+            >&2 print_help_unit_json_ins;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    if test ! -v 2; then
+        >&2 print_help_unit_json_ins;
+        exit 1;
+    fi;
+
     local arr=$1;
     local idx=$2;
 
-    (
-        jq ".[0:$idx]" <"$arr";
+    dry_run_eval "(
+        jq '.[0:$idx]' <'$arr';
         echo '[';
         jq .;
         echo ']';
-        jq ".[$idx:]" <"$arr";
-    ) \
-    | sed '/^\[]$/d' \
-    | sed '/^]$/{N;s/^]\n\[$/,/}' \
-    | jq .;
+        jq '.[$idx:]' <'$arr';
+    ) \\
+    | sed '/^\[]$/d' \\
+    | sed '/^]$/{N;s/^]\n\[$/,/}' \\
+    | jq .;"
 }
 
 
@@ -955,6 +1009,10 @@ ctl)
 freeport)
     shift;
     unit_freeport $@;
+    ;;
+json-ins)
+    shift;
+    unit_json_ins $@;
     ;;
 ps)
     shift;

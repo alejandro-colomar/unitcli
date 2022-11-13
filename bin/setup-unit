@@ -509,7 +509,7 @@ unit_ctl()
         unit_ctl_welcome $@;
         ;;
     *)
-        >&2 print_help;
+        >&2 print_help_unit_ctl;
         exit 1;
         ;;
     esac;

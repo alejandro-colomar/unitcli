@@ -76,6 +76,652 @@ dry_run_eval()
     fi;
 }
 
+
+unit_cmd()
+{
+    unit_ps -t m \
+    | wc -l \
+    | read -r nprocs \
+    ||:
+
+    test 0 -eq "$nprocs" \
+    && err "NGINX Unit isn't running.";
+
+    test 1 -ne "$nprocs" \
+    && err 'Only one NGINX Unit instance should be running.';
+
+    unit_ps -t m \
+    | sed 's/.*\[\(.*\)].*/\1/';
+}
+
+
+unit_ctl()
+{
+    help_unit_ctl()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl [-h] SUBCOMMAND [ARGS]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Control a running unitd(8) instance through its control';
+        echo '      socket.';
+        echo;
+        echo "      Run '$program_name ctl SUBCOMMAND -h' for more information";
+        echo '      on a subcommand.';
+        echo;
+        echo 'SUBCOMMANDS';
+        echo '      http    Send an HTTP request to the control socket.';
+        echo;
+        echo '      insert  Insert an element into a specified index in an array';
+        echo '              in the JSON configuration.';
+        echo;
+        echo '      sock    Print the address of the control socket.';
+        echo;
+        echo '      welcome Set up a basic configuration on a running instance';
+        echo '              of NGINX Unit.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_ctl;
+            exit 0;
+            ;;
+        -*)
+            >&2 help_unit_ctl;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    if test ! -v 1; then
+        >&2 help_unit_ctl;
+        exit 1;
+    fi;
+
+    case $1 in
+    http)
+        shift;
+        unit_ctl_http $@;
+        ;;
+    insert)
+        shift;
+        unit_ctl_insert $@;
+        ;;
+    sock)
+        shift;
+        unit_ctl_sock $@;
+        ;;
+    welcome)
+        shift;
+        unit_ctl_welcome $@;
+        ;;
+    *)
+        >&2 help_unit_ctl;
+        exit 1;
+        ;;
+    esac;
+}
+
+
+unit_ctl_http()
+{
+    help_unit_ctl_http()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl http [-hn] METHOD PATH";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Send an HTTP request to the unitd(8) control socket.';
+        echo;
+        echo '      The payload is read from standard input.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+        echo;
+        echo '      -n, --dry-run';
+        echo '              Dry run.  Print the command to be run instead'
+        echo '              of actually running it.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_ctl_http;
+            exit 0;
+            ;;
+        -n | --dry-run)
+            dry_run='yes';
+            ;;
+        -*)
+            >&2 help_unit_ctl_http;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    if test ! -v 2; then
+        >&2 help_unit_ctl_http;
+        exit 1;
+    fi;
+
+    local method="$1";
+    local path="$2";
+
+    unit_ctl_sock -c \
+    | read -r curl_opt;
+
+    dry_run_eval "curl -X $method -d@- ${curl_opt}${path};";
+}
+
+
+unit_ctl_insert()
+{
+    help_unit_ctl_insert()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl insert [-h] PATH INDEX";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Insert an element into a specified position (INDEX) in the';
+        echo '      JSON array in the unitd(8) configuration API at PATH.';
+        echo;
+        echo '      The new element is read from standard input.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_ctl_insert;
+            exit 0;
+            ;;
+        -n | --dry-run)
+            dry_run='yes';
+            ;;
+        -*)
+            >&2 help_unit_ctl_insert;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    if test ! -v 2; then
+        >&2 help_unit_ctl_insert;
+        exit 1;
+    fi;
+
+    local path="$1";
+    local idx="$2";
+
+    local old="$(mktemp)";
+
+    unit_ctl_sock -c \
+    | read -r curl_opt;
+
+    curl -X GET ${curl_opt}${path} >"$old" 2>/dev/null;
+
+    unit_json_ins "$old" "$idx" \
+    | unit_ctl_http PUT "$path";
+}
+
+
+unit_ctl_sock()
+{
+    help_unit_ctl_sock()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl sock [-ch]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Print the address of the control socket.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -c, --curl';
+        echo '              Print an argument suitable for curl(1).';
+        echo;
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -c | --curl)
+            local curl_opt='yes';
+            ;;
+        -h | --help)
+            help_unit_ctl_sock;
+            exit 0;
+            ;;
+        -*)
+            >&2 help_unit_ctl_sock;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    unit_cmd \
+    | read -r cmd;
+
+    echo "$cmd" \
+    | if grep '\--control' >/dev/null; then
+        echo "$cmd" \
+        | sed 's/ --/\n--/g' \
+        | grep '\--control' \
+        | cut -d' ' -f2;
+    else
+        $cmd --help \
+        | sed -n '/\--control/,+1p' \
+        | grep 'default:' \
+        | sed 's/ *default: "\(.*\)"/\1/';
+    fi \
+    | read -r control;
+
+    if ! test -v curl_opt; then
+        echo "$control";
+        return 0;
+    fi;
+
+    if echo "$control" | grep '^unix:' >/dev/null; then
+        unix_socket="$(echo "$control" | sed 's/unix:/--unix-socket /')";
+        host='localhost';
+    else
+        unix_socket='';
+        host="$control";
+    fi;
+
+    echo "$unix_socket http://$host";
+}
+
+
+unit_ctl_welcome()
+{
+    help_unit_ctl_welcome()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ctl welcome [-hn]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      This script simplifies configuring a running';
+        echo '      NGINX Unit instance for first-time users.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+        echo;
+        echo '      -n, --dry-run';
+        echo '              Dry run.  Print the commands to be run instead'
+        echo '              of actually running them.  Each command is';
+        echo '              preceded by a line explaining what it does.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_ctl_welcome;
+            exit 0;
+            ;;
+        -n | --dry-run)
+            dry_run='yes';
+            ;;
+        -*)
+            >&2 help_unit_ctl_welcome;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    id -u \
+    | xargs test 0 -ne \
+    && err 'This script requires root privileges to run.';
+
+    command -v curl >/dev/null \
+    || err 'curl(1) not found in PATH.  It must be installed to run this script.';
+
+    www='/srv/www/unit/index.html';
+    test -e "$www" \
+    && www="$(mktemp)";
+
+    unit_cmd \
+    | read -r cmd;
+
+    # Check unitd is not configured already.
+    echo "$cmd" \
+    | if grep '\--state' >/dev/null; then
+        echo "$cmd" \
+        | sed 's/ --/\n--/g' \
+        | grep '\--state' \
+        | cut -d' ' -f2;
+    else
+        $cmd --help \
+        | sed -n '/\--state/,+1p' \
+        | grep 'default:' \
+        | sed 's/ *default: "\(.*\)"/\1/';
+    fi \
+    | sed 's,$,/conf.json,' \
+    | xargs test -e \
+    && err 'NGINX Unit is already configured.'
+
+    unit_ctl_sock -c \
+    | read -r curl_opt;
+
+    curl $curl_opt/ >/dev/null 2>&1 \
+    || err "Can't reach the control socket.";
+
+    (
+        unit_freeport \
+        || err "Can't find an available port.";
+    ) \
+    | read -r port;
+
+    dry_run_echo 'Create a file to serve:';
+    dry_run_eval "mkdir -p $(dirname $www);";
+    dry_run_eval "echo 'Welcome to NGINX Unit!' >'$www';";
+    dry_run_echo;
+    dry_run_echo 'Give it appropriate permissions:';
+    dry_run_eval "chmod 644 '$www';";
+    dry_run_echo;
+
+    dry_run_echo 'Configure unitd:'
+    dry_run_eval "cat <<__EOF__ \\
+        | sed 's/8080/$port/' \\
+        | curl -X PUT -d@- $curl_opt/config/;
+        {
+            \"listeners\": {
+                \"*:8080\": {
+                    \"pass\": \"routes\"
+                }
+            },
+            \"routes\": [{
+                \"action\": {
+                    \"share\": \"$www\"
+                }
+            }]
+        }
+__EOF__";
+
+    dry_run_echo;
+
+    echo;
+    echo 'You may want to try the following commands now:';
+    echo;
+    echo 'Check out current unitd configuration:';
+    echo "    curl $curl_opt";
+    echo;
+    echo 'Browse the welcome page:';
+    echo "    curl http://localhost:$port";
+}
+
+
+unit_freeport()
+{
+    help_unit_freeport()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name freeport [-h]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Print an available TCP port.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_freeport;
+            exit 0;
+            ;;
+        -*)
+            >&2 help_unit_freeport;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    freeport="$(mktemp -t freeport-XXXXXX)";
+
+    cat <<__EOF__ \
+    | cc -x c -o $freeport -;
+        #include <netinet/in.h>
+        #include <stdio.h>
+        #include <stdlib.h>
+        #include <strings.h>
+        #include <sys/socket.h>
+        #include <unistd.h>
+
+
+        int32_t get_free_port(void);
+
+
+        int
+        main(void)
+        {
+            int32_t  port;
+
+            port = get_free_port();
+            if (port == -1)
+                exit(EXIT_FAILURE);
+
+            printf("%d\n", port);
+            exit(EXIT_SUCCESS);
+        }
+
+
+        int32_t
+        get_free_port(void)
+        {
+            int                 sfd;
+            int32_t             port;
+            socklen_t           len;
+            struct sockaddr_in  addr;
+
+            port = -1;
+
+            sfd = socket(PF_INET, SOCK_STREAM, 0);
+            if (sfd == -1) {
+                perror("socket()");
+                return -1;
+            }
+
+            bzero(&addr, sizeof(addr));
+            addr.sin_family = AF_INET;
+            addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
+            addr.sin_port = htons(0);  // random port
+
+            len = sizeof(addr);
+            if (bind(sfd, (struct sockaddr *) &addr, len)) {
+                perror("bind()");
+                goto fail;
+            }
+
+            if (getsockname(sfd, (struct sockaddr *) &addr, &len)) {
+                perror("getsockname()");
+                goto fail;
+            }
+
+            port = ntohs(addr.sin_port);
+
+        fail:
+            close(sfd);
+            return port;
+        }
+__EOF__
+
+    $freeport;
+}
+
+
+unit_json_ins()
+{
+    help_unit_json_ins()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name json-ins [-hn] JSON INDEX";
+        echo;
+        echo 'ARGUMENTS';
+        echo '      JSON    Path to a JSON file containing a top-level array.';
+        echo;
+        echo '      INDEX   Position in the array where to insert the element.';
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Insert a JSON element read from standard input into a JSON';
+        echo '      array read from a file at a given INDEX.';
+        echo;
+        echo '      The resulting array is printed to standard output.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+        echo;
+        echo '      -n, --dry-run';
+        echo '              Dry run.  Print the command to be run instead';
+        echo '              of actually running it.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_json_ins;
+            exit 0;
+            ;;
+        -n | --dry-run)
+            dry_run='yes';
+            ;;
+        -*)
+            >&2 help_unit_json_ins;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    if test ! -v 2; then
+        >&2 help_unit_json_ins;
+        exit 1;
+    fi;
+
+    local arr=$1;
+    local idx=$2;
+
+    dry_run_eval "(
+        jq '.[0:$idx]' <'$arr';
+        echo '[';
+        jq .;
+        echo ']';
+        jq '.[$idx:]' <'$arr';
+    ) \\
+    | sed '/^\[]$/d' \\
+    | sed '/^]$/{N;s/^]\n\[$/,/}' \\
+    | jq .;"
+}
+
+
+unit_ps()
+{
+    help_unit_ps()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name ps [-h] [-t TYPE]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      List unitd(8) processes.';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+        echo;
+        echo '      -t, --type TYPE';
+        echo '              List only processes of type TYPE.  The available';
+        echo '              types are:';
+        echo;
+        echo '              -  controller (c)';
+        echo '              -  main (m)';
+        echo '              -  router (r)';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_ps;
+            exit 0;
+            ;;
+        -t | --type)
+            local type=;
+            case "$2" in
+            c | controller)
+                local type_c='c';
+                ;;
+            m | main)
+                local type_m='m';
+                ;;
+            r | router)
+                local type_r='r';
+                ;;
+            esac;
+            shift;
+            ;;
+        -*)
+            >&2 help_unit_ps;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    ps ax \
+    | if test -v type; then
+        grep ${type_c:+-e 'unit: controller'} \
+             ${type_m:+-e 'unit: main'} \
+             ${type_r:+-e 'unit: router'};
+    else
+        grep 'unit: ';
+    fi \
+    | grep -v grep \
+    ||:
+}
+
+
 unit_repo_config()
 {
     help_unit_repo_config()
@@ -331,651 +977,6 @@ __EOF__';
     echo
     echo "All done; the NGINX Unit repository for "$osName" "$osVersion" is set up."
     echo 'Further steps: https://unit.nginx.org/installation/#official-packages'
-}
-
-
-unit_freeport()
-{
-    help_unit_freeport()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name freeport [-h]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Print an available TCP port.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
-    while test -v 1; do
-        case "$1" in
-        -h | --help)
-            help_unit_freeport;
-            exit 0;
-            ;;
-        -*)
-            >&2 help_unit_freeport;
-            exit 1;
-            ;;
-        *)
-            break;
-            ;;
-        esac;
-        shift;
-    done;
-
-    freeport="$(mktemp -t freeport-XXXXXX)";
-
-    cat <<__EOF__ \
-    | cc -x c -o $freeport -;
-        #include <netinet/in.h>
-        #include <stdio.h>
-        #include <stdlib.h>
-        #include <strings.h>
-        #include <sys/socket.h>
-        #include <unistd.h>
-
-
-        int32_t get_free_port(void);
-
-
-        int
-        main(void)
-        {
-            int32_t  port;
-
-            port = get_free_port();
-            if (port == -1)
-                exit(EXIT_FAILURE);
-
-            printf("%d\n", port);
-            exit(EXIT_SUCCESS);
-        }
-
-
-        int32_t
-        get_free_port(void)
-        {
-            int                 sfd;
-            int32_t             port;
-            socklen_t           len;
-            struct sockaddr_in  addr;
-
-            port = -1;
-
-            sfd = socket(PF_INET, SOCK_STREAM, 0);
-            if (sfd == -1) {
-                perror("socket()");
-                return -1;
-            }
-
-            bzero(&addr, sizeof(addr));
-            addr.sin_family = AF_INET;
-            addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
-            addr.sin_port = htons(0);  // random port
-
-            len = sizeof(addr);
-            if (bind(sfd, (struct sockaddr *) &addr, len)) {
-                perror("bind()");
-                goto fail;
-            }
-
-            if (getsockname(sfd, (struct sockaddr *) &addr, &len)) {
-                perror("getsockname()");
-                goto fail;
-            }
-
-            port = ntohs(addr.sin_port);
-
-        fail:
-            close(sfd);
-            return port;
-        }
-__EOF__
-
-    $freeport;
-}
-
-
-unit_ctl()
-{
-    help_unit_ctl()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ctl [-h] SUBCOMMAND [ARGS]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Control a running unitd(8) instance through its control';
-        echo '      socket.';
-        echo;
-        echo "      Run '$program_name ctl SUBCOMMAND -h' for more information";
-        echo '      on a subcommand.';
-        echo;
-        echo 'SUBCOMMANDS';
-        echo '      http    Send an HTTP request to the control socket.';
-        echo;
-        echo '      insert  Insert an element into a specified index in an array';
-        echo '              in the JSON configuration.';
-        echo;
-        echo '      sock    Print the address of the control socket.';
-        echo;
-        echo '      welcome Set up a basic configuration on a running instance';
-        echo '              of NGINX Unit.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
-    while test -v 1; do
-        case "$1" in
-        -h | --help)
-            help_unit_ctl;
-            exit 0;
-            ;;
-        -*)
-            >&2 help_unit_ctl;
-            exit 1;
-            ;;
-        *)
-            break;
-            ;;
-        esac;
-        shift;
-    done;
-
-    if test ! -v 1; then
-        >&2 help_unit_ctl;
-        exit 1;
-    fi;
-
-    case $1 in
-    http)
-        shift;
-        unit_ctl_http $@;
-        ;;
-    insert)
-        shift;
-        unit_ctl_insert $@;
-        ;;
-    sock)
-        shift;
-        unit_ctl_sock $@;
-        ;;
-    welcome)
-        shift;
-        unit_ctl_welcome $@;
-        ;;
-    *)
-        >&2 help_unit_ctl;
-        exit 1;
-        ;;
-    esac;
-}
-
-
-unit_ctl_sock()
-{
-    help_unit_ctl_sock()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ctl sock [-ch]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Print the address of the control socket.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -c, --curl';
-        echo '              Print an argument suitable for curl(1).';
-        echo;
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
-    while test -v 1; do
-        case "$1" in
-        -c | --curl)
-            local curl_opt='yes';
-            ;;
-        -h | --help)
-            help_unit_ctl_sock;
-            exit 0;
-            ;;
-        -*)
-            >&2 help_unit_ctl_sock;
-            exit 1;
-            ;;
-        *)
-            break;
-            ;;
-        esac;
-        shift;
-    done;
-
-    unit_cmd \
-    | read -r cmd;
-
-    echo "$cmd" \
-    | if grep '\--control' >/dev/null; then
-        echo "$cmd" \
-        | sed 's/ --/\n--/g' \
-        | grep '\--control' \
-        | cut -d' ' -f2;
-    else
-        $cmd --help \
-        | sed -n '/\--control/,+1p' \
-        | grep 'default:' \
-        | sed 's/ *default: "\(.*\)"/\1/';
-    fi \
-    | read -r control;
-
-    if ! test -v curl_opt; then
-        echo "$control";
-        return 0;
-    fi;
-
-    if echo "$control" | grep '^unix:' >/dev/null; then
-        unix_socket="$(echo "$control" | sed 's/unix:/--unix-socket /')";
-        host='localhost';
-    else
-        unix_socket='';
-        host="$control";
-    fi;
-
-    echo "$unix_socket http://$host";
-}
-
-
-unit_ctl_insert()
-{
-    help_unit_ctl_insert()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ctl insert [-h] PATH INDEX";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Insert an element into a specified position (INDEX) in the';
-        echo '      JSON array in the unitd(8) configuration API at PATH.';
-        echo;
-        echo '      The new element is read from standard input.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
-    while test -v 1; do
-        case "$1" in
-        -h | --help)
-            help_unit_ctl_insert;
-            exit 0;
-            ;;
-        -n | --dry-run)
-            dry_run='yes';
-            ;;
-        -*)
-            >&2 help_unit_ctl_insert;
-            exit 1;
-            ;;
-        *)
-            break;
-            ;;
-        esac;
-        shift;
-    done;
-
-    if test ! -v 2; then
-        >&2 help_unit_ctl_insert;
-        exit 1;
-    fi;
-
-    local path="$1";
-    local idx="$2";
-
-    local old="$(mktemp)";
-
-    unit_ctl_sock -c \
-    | read -r curl_opt;
-
-    curl -X GET ${curl_opt}${path} >"$old" 2>/dev/null;
-
-    unit_json_ins "$old" "$idx" \
-    | unit_ctl_http PUT "$path";
-}
-
-
-unit_ctl_http()
-{
-    help_unit_ctl_http()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ctl http [-hn] METHOD PATH";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Send an HTTP request to the unitd(8) control socket.';
-        echo;
-        echo '      The payload is read from standard input.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -n, --dry-run';
-        echo '              Dry run.  Print the command to be run instead'
-        echo '              of actually running it.';
-    }
-
-    while test -v 1; do
-        case "$1" in
-        -h | --help)
-            help_unit_ctl_http;
-            exit 0;
-            ;;
-        -n | --dry-run)
-            dry_run='yes';
-            ;;
-        -*)
-            >&2 help_unit_ctl_http;
-            exit 1;
-            ;;
-        *)
-            break;
-            ;;
-        esac;
-        shift;
-    done;
-
-    if test ! -v 2; then
-        >&2 help_unit_ctl_http;
-        exit 1;
-    fi;
-
-    local method="$1";
-    local path="$2";
-
-    unit_ctl_sock -c \
-    | read -r curl_opt;
-
-    dry_run_eval "curl -X $method -d@- ${curl_opt}${path};";
-}
-
-
-unit_ctl_welcome()
-{
-    help_unit_ctl_welcome()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ctl welcome [-hn]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      This script simplifies configuring a running';
-        echo '      NGINX Unit instance for first-time users.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -n, --dry-run';
-        echo '              Dry run.  Print the commands to be run instead'
-        echo '              of actually running them.  Each command is';
-        echo '              preceded by a line explaining what it does.';
-    }
-
-    while test -v 1; do
-        case "$1" in
-        -h | --help)
-            help_unit_ctl_welcome;
-            exit 0;
-            ;;
-        -n | --dry-run)
-            dry_run='yes';
-            ;;
-        -*)
-            >&2 help_unit_ctl_welcome;
-            exit 1;
-            ;;
-        *)
-            break;
-            ;;
-        esac;
-        shift;
-    done;
-
-    id -u \
-    | xargs test 0 -ne \
-    && err 'This script requires root privileges to run.';
-
-    command -v curl >/dev/null \
-    || err 'curl(1) not found in PATH.  It must be installed to run this script.';
-
-    www='/srv/www/unit/index.html';
-    test -e "$www" \
-    && www="$(mktemp)";
-
-    unit_cmd \
-    | read -r cmd;
-
-    # Check unitd is not configured already.
-    echo "$cmd" \
-    | if grep '\--state' >/dev/null; then
-        echo "$cmd" \
-        | sed 's/ --/\n--/g' \
-        | grep '\--state' \
-        | cut -d' ' -f2;
-    else
-        $cmd --help \
-        | sed -n '/\--state/,+1p' \
-        | grep 'default:' \
-        | sed 's/ *default: "\(.*\)"/\1/';
-    fi \
-    | sed 's,$,/conf.json,' \
-    | xargs test -e \
-    && err 'NGINX Unit is already configured.'
-
-    unit_ctl_sock -c \
-    | read -r curl_opt;
-
-    curl $curl_opt/ >/dev/null 2>&1 \
-    || err "Can't reach the control socket.";
-
-    (
-        unit_freeport \
-        || err "Can't find an available port.";
-    ) \
-    | read -r port;
-
-    dry_run_echo 'Create a file to serve:';
-    dry_run_eval "mkdir -p $(dirname $www);";
-    dry_run_eval "echo 'Welcome to NGINX Unit!' >'$www';";
-    dry_run_echo;
-    dry_run_echo 'Give it appropriate permissions:';
-    dry_run_eval "chmod 644 '$www';";
-    dry_run_echo;
-
-    dry_run_echo 'Configure unitd:'
-    dry_run_eval "cat <<__EOF__ \\
-        | sed 's/8080/$port/' \\
-        | curl -X PUT -d@- $curl_opt/config/;
-        {
-            \"listeners\": {
-                \"*:8080\": {
-                    \"pass\": \"routes\"
-                }
-            },
-            \"routes\": [{
-                \"action\": {
-                    \"share\": \"$www\"
-                }
-            }]
-        }
-__EOF__";
-
-    dry_run_echo;
-
-    echo;
-    echo 'You may want to try the following commands now:';
-    echo;
-    echo 'Check out current unitd configuration:';
-    echo "    curl $curl_opt";
-    echo;
-    echo 'Browse the welcome page:';
-    echo "    curl http://localhost:$port";
-}
-
-
-unit_ps()
-{
-    help_unit_ps()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ps [-h] [-t TYPE]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      List unitd(8) processes.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -t, --type TYPE';
-        echo '              List only processes of type TYPE.  The available';
-        echo '              types are:';
-        echo;
-        echo '              -  controller (c)';
-        echo '              -  main (m)';
-        echo '              -  router (r)';
-    }
-
-    while test -v 1; do
-        case "$1" in
-        -h | --help)
-            help_unit_ps;
-            exit 0;
-            ;;
-        -t | --type)
-            local type=;
-            case "$2" in
-            c | controller)
-                local type_c='c';
-                ;;
-            m | main)
-                local type_m='m';
-                ;;
-            r | router)
-                local type_r='r';
-                ;;
-            esac;
-            shift;
-            ;;
-        -*)
-            >&2 help_unit_ps;
-            exit 1;
-            ;;
-        *)
-            break;
-            ;;
-        esac;
-        shift;
-    done;
-
-    ps ax \
-    | if test -v type; then
-        grep ${type_c:+-e 'unit: controller'} \
-             ${type_m:+-e 'unit: main'} \
-             ${type_r:+-e 'unit: router'};
-    else
-        grep 'unit: ';
-    fi \
-    | grep -v grep \
-    ||:
-}
-
-
-unit_cmd()
-{
-    unit_ps -t m \
-    | wc -l \
-    | read -r nprocs \
-    ||:
-
-    test 0 -eq "$nprocs" \
-    && err "NGINX Unit isn't running.";
-
-    test 1 -ne "$nprocs" \
-    && err 'Only one NGINX Unit instance should be running.';
-
-    unit_ps -t m \
-    | sed 's/.*\[\(.*\)].*/\1/';
-}
-
-
-unit_json_ins()
-{
-    help_unit_json_ins()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name json-ins [-hn] JSON INDEX";
-        echo;
-        echo 'ARGUMENTS';
-        echo '      JSON    Path to a JSON file containing a top-level array.';
-        echo;
-        echo '      INDEX   Position in the array where to insert the element.';
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Insert a JSON element read from standard input into a JSON';
-        echo '      array read from a file at a given INDEX.';
-        echo;
-        echo '      The resulting array is printed to standard output.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -n, --dry-run';
-        echo '              Dry run.  Print the command to be run instead';
-        echo '              of actually running it.';
-    }
-
-    while test -v 1; do
-        case "$1" in
-        -h | --help)
-            help_unit_json_ins;
-            exit 0;
-            ;;
-        -n | --dry-run)
-            dry_run='yes';
-            ;;
-        -*)
-            >&2 help_unit_json_ins;
-            exit 1;
-            ;;
-        *)
-            break;
-            ;;
-        esac;
-        shift;
-    done;
-
-    if test ! -v 2; then
-        >&2 help_unit_json_ins;
-        exit 1;
-    fi;
-
-    local arr=$1;
-    local idx=$2;
-
-    dry_run_eval "(
-        jq '.[0:$idx]' <'$arr';
-        echo '[';
-        jq .;
-        echo ']';
-        jq '.[$idx:]' <'$arr';
-    ) \\
-    | sed '/^\[]$/d' \\
-    | sed '/^]$/{N;s/^]\n\[$/,/}' \\
-    | jq .;"
 }
 
 

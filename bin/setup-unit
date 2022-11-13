@@ -16,7 +16,7 @@ program_name="$0";
 
 dry_run='no';
 
-print_help_unit()
+help_unit()
 {
     echo 'SYNOPSIS';
     echo "      $program_name [-h] COMMAND [ARGS]";
@@ -78,7 +78,7 @@ dry_run_eval()
 
 unit_repo_config()
 {
-    print_help_unit_repo_config()
+    help_unit_repo_config()
     {
         echo 'SYNOPSIS';
         echo "      $program_name repo-config [-hn]";
@@ -269,14 +269,14 @@ __EOF__';
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unit_repo_config;
+            help_unit_repo_config;
             exit 0;
             ;;
         -n | --dry-run)
             dry_run='yes';
             ;;
         -*)
-            >&2 print_help_unit_repo_config;
+            >&2 help_unit_repo_config;
             exit 1;
             ;;
         *)
@@ -336,7 +336,7 @@ __EOF__';
 
 unit_freeport()
 {
-    print_help_unit_freeport()
+    help_unit_freeport()
     {
         echo 'SYNOPSIS';
         echo "      $program_name freeport [-h]";
@@ -352,11 +352,11 @@ unit_freeport()
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unit_freeport;
+            help_unit_freeport;
             exit 0;
             ;;
         -*)
-            >&2 print_help_unit_freeport;
+            >&2 help_unit_freeport;
             exit 1;
             ;;
         *)
@@ -441,7 +441,7 @@ __EOF__
 
 unit_ctl()
 {
-    print_help_unit_ctl()
+    help_unit_ctl()
     {
         echo 'SYNOPSIS';
         echo "      $program_name ctl [-h] SUBCOMMAND [ARGS]";
@@ -472,11 +472,11 @@ unit_ctl()
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unit_ctl;
+            help_unit_ctl;
             exit 0;
             ;;
         -*)
-            >&2 print_help_unit_ctl;
+            >&2 help_unit_ctl;
             exit 1;
             ;;
         *)
@@ -487,7 +487,7 @@ unit_ctl()
     done;
 
     if test ! -v 1; then
-        >&2 print_help_unit_ctl;
+        >&2 help_unit_ctl;
         exit 1;
     fi;
 
@@ -509,7 +509,7 @@ unit_ctl()
         unit_ctl_welcome $@;
         ;;
     *)
-        >&2 print_help_unit_ctl;
+        >&2 help_unit_ctl;
         exit 1;
         ;;
     esac;
@@ -518,7 +518,7 @@ unit_ctl()
 
 unit_ctl_sock()
 {
-    print_help_unit_ctl_sock()
+    help_unit_ctl_sock()
     {
         echo 'SYNOPSIS';
         echo "      $program_name ctl sock [-ch]";
@@ -540,11 +540,11 @@ unit_ctl_sock()
             local curl_opt='yes';
             ;;
         -h | --help)
-            print_help_unit_ctl_sock;
+            help_unit_ctl_sock;
             exit 0;
             ;;
         -*)
-            >&2 print_help_unit_ctl_sock;
+            >&2 help_unit_ctl_sock;
             exit 1;
             ;;
         *)
@@ -590,7 +590,7 @@ unit_ctl_sock()
 
 unit_ctl_insert()
 {
-    print_help_unit_ctl_insert()
+    help_unit_ctl_insert()
     {
         echo 'SYNOPSIS';
         echo "      $program_name ctl insert [-h] PATH INDEX";
@@ -609,14 +609,14 @@ unit_ctl_insert()
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unit_ctl_insert;
+            help_unit_ctl_insert;
             exit 0;
             ;;
         -n | --dry-run)
             dry_run='yes';
             ;;
         -*)
-            >&2 print_help_unit_ctl_insert;
+            >&2 help_unit_ctl_insert;
             exit 1;
             ;;
         *)
@@ -627,7 +627,7 @@ unit_ctl_insert()
     done;
 
     if test ! -v 2; then
-        >&2 print_help_unit_ctl_insert;
+        >&2 help_unit_ctl_insert;
         exit 1;
     fi;
 
@@ -648,7 +648,7 @@ unit_ctl_insert()
 
 unit_ctl_http()
 {
-    print_help_unit_ctl_http()
+    help_unit_ctl_http()
     {
         echo 'SYNOPSIS';
         echo "      $program_name ctl http [-hn] METHOD PATH";
@@ -670,14 +670,14 @@ unit_ctl_http()
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unit_ctl_http;
+            help_unit_ctl_http;
             exit 0;
             ;;
         -n | --dry-run)
             dry_run='yes';
             ;;
         -*)
-            >&2 print_help_unit_ctl_http;
+            >&2 help_unit_ctl_http;
             exit 1;
             ;;
         *)
@@ -688,7 +688,7 @@ unit_ctl_http()
     done;
 
     if test ! -v 2; then
-        >&2 print_help_unit_ctl_http;
+        >&2 help_unit_ctl_http;
         exit 1;
     fi;
 
@@ -704,7 +704,7 @@ unit_ctl_http()
 
 unit_ctl_welcome()
 {
-    print_help_unit_ctl_welcome()
+    help_unit_ctl_welcome()
     {
         echo 'SYNOPSIS';
         echo "      $program_name ctl welcome [-hn]";
@@ -726,14 +726,14 @@ unit_ctl_welcome()
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unit_ctl_welcome;
+            help_unit_ctl_welcome;
             exit 0;
             ;;
         -n | --dry-run)
             dry_run='yes';
             ;;
         -*)
-            >&2 print_help_unit_ctl_welcome;
+            >&2 help_unit_ctl_welcome;
             exit 1;
             ;;
         *)
@@ -827,7 +827,7 @@ __EOF__";
 
 unit_ps()
 {
-    print_help_unit_ps()
+    help_unit_ps()
     {
         echo 'SYNOPSIS';
         echo "      $program_name ps [-h] [-t TYPE]";
@@ -851,7 +851,7 @@ unit_ps()
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unit_ps;
+            help_unit_ps;
             exit 0;
             ;;
         -t | --type)
@@ -870,7 +870,7 @@ unit_ps()
             shift;
             ;;
         -*)
-            >&2 print_help_unit_ps;
+            >&2 help_unit_ps;
             exit 1;
             ;;
         *)
@@ -913,7 +913,7 @@ unit_cmd()
 
 unit_json_ins()
 {
-    print_help_unit_json_ins()
+    help_unit_json_ins()
     {
         echo 'SYNOPSIS';
         echo "      $program_name json-ins [-hn] JSON INDEX";
@@ -941,14 +941,14 @@ unit_json_ins()
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_unit_json_ins;
+            help_unit_json_ins;
             exit 0;
             ;;
         -n | --dry-run)
             dry_run='yes';
             ;;
         -*)
-            >&2 print_help_unit_json_ins;
+            >&2 help_unit_json_ins;
             exit 1;
             ;;
         *)
@@ -959,7 +959,7 @@ unit_json_ins()
     done;
 
     if test ! -v 2; then
-        >&2 print_help_unit_json_ins;
+        >&2 help_unit_json_ins;
         exit 1;
     fi;
 
@@ -982,11 +982,11 @@ unit_json_ins()
 while test -v 1; do
     case "$1" in
     -h | --help)
-        print_help_unit;
+        help_unit;
         exit 0;
         ;;
     -*)
-        >&2 print_help_unit;
+        >&2 help_unit;
         exit 1;
         ;;
     *)
@@ -997,7 +997,7 @@ while test -v 1; do
 done;
 
 if test ! -v 1; then
-    >&2 print_help_unit;
+    >&2 help_unit;
     exit 1;
 fi;
 
@@ -1023,7 +1023,7 @@ repo-config)
     unit_repo_config $@;
     ;;
 *)
-    >&2 print_help_unit;
+    >&2 help_unit;
     exit 1;
     ;;
 esac;

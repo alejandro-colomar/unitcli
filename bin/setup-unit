@@ -16,7 +16,7 @@ program_name="$0";
 
 dry_run='no';
 
-print_help()
+print_help_unit()
 {
     echo 'SYNOPSIS';
     echo "      $program_name [-h] COMMAND [ARGS]";
@@ -76,9 +76,9 @@ dry_run_eval()
     fi;
 }
 
-repo_config()
+unit_repo_config()
 {
-    print_help_repo_config()
+    print_help_unit_repo_config()
     {
         echo 'SYNOPSIS';
         echo "      $program_name repo-config [-hn]";
@@ -269,14 +269,14 @@ __EOF__';
     while test -v 1; do
         case "$1" in
         -h | --help)
-            print_help_repo_config;
+            print_help_unit_repo_config;
             exit 0;
             ;;
         -n | --dry-run)
             dry_run='yes';
             ;;
         -*)
-            >&2 print_help_repo_config;
+            >&2 print_help_unit_repo_config;
             exit 1;
             ;;
         *)
@@ -982,11 +982,11 @@ unit_json_ins()
 while test -v 1; do
     case "$1" in
     -h | --help)
-        print_help;
+        print_help_unit;
         exit 0;
         ;;
     -*)
-        >&2 print_help;
+        >&2 print_help_unit;
         exit 1;
         ;;
     *)
@@ -997,7 +997,7 @@ while test -v 1; do
 done;
 
 if test ! -v 1; then
-    >&2 print_help;
+    >&2 print_help_unit;
     exit 1;
 fi;
 
@@ -1020,10 +1020,10 @@ ps)
     ;;
 repo-config)
     shift;
-    repo_config $@;
+    unit_repo_config $@;
     ;;
 *)
-    >&2 print_help;
+    >&2 print_help_unit;
     exit 1;
     ;;
 esac;

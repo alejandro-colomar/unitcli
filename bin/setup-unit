@@ -480,7 +480,7 @@ unit_ctl_welcome()
     dry_run_echo 'Configure unitd:'
     dry_run_eval "cat <<__EOF__ \\
         | sed 's/8080/$port/' \\
-        | curl -X PUT -d@- $curl_opt/config/;
+        | curl -X PUT -d@- $curl_opt/config;
         {
             \"listeners\": {
                 \"*:8080\": {
@@ -501,10 +501,10 @@ __EOF__";
     echo 'You may want to try the following commands now:';
     echo;
     echo 'Check out current unitd configuration:';
-    echo "    curl $curl_opt";
+    echo "    curl $curl_opt/config";
     echo;
     echo 'Browse the welcome page:';
-    echo "    curl http://localhost:$port";
+    echo "    curl http://localhost:$port/";
 }
 
 

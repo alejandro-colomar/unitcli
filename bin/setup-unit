@@ -82,12 +82,12 @@ help_more_unit()
 
 warn()
 {
-    >&2 echo "unit: error: $*";
+    >&2 echo "$(basename $program_name): error: $*";
 }
 
 err()
 {
-    >&2 echo "unit: error: $*";
+    >&2 echo "$(basename $program_name): error: $*";
     exit 1;
 }
 

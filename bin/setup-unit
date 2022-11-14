@@ -540,14 +540,14 @@ unit_ctl_welcome()
                 <p>By default, Unit'"'"'s control API listens for configuration changes
                    on the '"$(unit_ctl_sock | grep -q '^unix:' && echo '<a href="https://en.wikipedia.org/wiki/Unix_domain_socket">Unix socket</a>' || echo 'socket')"' at
                 <b>'"$(unit_ctl_sock)"'</b><br>To see the current configuration:</p>
-                <pre>sudo curl '"$curl_opt"'/config</pre>
+                <pre>'"${SUDO_USER:+sudo }"'curl '"$curl_opt"'/config</pre>
                 </div>
 
                 <h3>Change Listener Port</h3>
                 <div class="indent">
                 <p>This page is served over a random TCP high port.  To choose the default HTTP port (80),
                    replace the <b>"listeners"</b> object:</p>
-                <pre>echo '"'"'{"*:80": {"pass": "routes"}}'"'"' | sudo curl -X PUT -d@- '"$curl_opt"'/config/listeners</pre>
+                <pre>echo '"'"'{"*:80": {"pass": "routes"}}'"'"' | '"${SUDO_USER:+sudo }"'curl -X PUT -d@- '"$curl_opt"'/config/listeners</pre>
                 Then remove the port number from the address bar and reload the page.
                 </div>
 

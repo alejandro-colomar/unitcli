@@ -43,6 +43,9 @@ help_unit()
     echo '              Configure your package manager with the NGINX Unit';
     echo '              repository for later installation';
     echo;
+    echo '      welcome Set up a basic configuration on a running instance';
+    echo '              of NGINX Unit.';
+    echo;
     echo 'OPTIONS';
     echo '      -h, --help';
     echo '              Print this help.';
@@ -117,9 +120,6 @@ unit_ctl()
         echo;
         echo '      sock    Print the address of the control socket.';
         echo;
-        echo '      welcome Set up a basic configuration on a running instance';
-        echo '              of NGINX Unit.';
-        echo;
         echo 'OPTIONS';
         echo '      -h, --help';
         echo '              Print this help.';
@@ -159,10 +159,6 @@ unit_ctl()
     sock)
         shift;
         unit_ctl_sock $@;
-        ;;
-    welcome)
-        shift;
-        unit_ctl_welcome $@;
         ;;
     *)
         >&2 help_unit_ctl;
@@ -363,7 +359,7 @@ unit_ctl_welcome()
     help_unit_ctl_welcome()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name ctl welcome [-hn]";
+        echo "      $program_name welcome [-hn]";
         echo;
         echo 'DESCRIPTION';
         echo '      This script simplifies configuring a running';
@@ -1022,6 +1018,10 @@ ps)
 repo-config)
     shift;
     unit_repo_config $@;
+    ;;
+welcome)
+    shift;
+    unit_ctl_welcome $@;
     ;;
 *)
     >&2 help_unit;

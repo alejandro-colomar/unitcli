@@ -501,7 +501,7 @@ __EOF__";
     echo 'You may want to try the following commands now:';
     echo;
     echo 'Check out current unitd configuration:';
-    echo "    curl $curl_opt/config";
+    echo "    ${SUDO_USER:+'sudo'} curl $curl_opt/config";
     echo;
     echo 'Browse the welcome page:';
     echo "    curl http://localhost:$port/";

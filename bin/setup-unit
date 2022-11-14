@@ -408,6 +408,9 @@ unit_ctl_welcome()
 
     while test -v 1; do
         case "$1" in
+        -f | --force)
+            local force='yes';
+            ;;
         -h | --help)
             help_unit_ctl_welcome;
             exit 0;
@@ -437,25 +440,32 @@ unit_ctl_welcome()
     test -e "$www" \
     && www="$(mktemp)";
 
-    unit_cmd \
-    | read -r cmd;
+    if ! test -v force; then
+        unit_cmd \
+        | read -r cmd;
 
-    # Check unitd is not configured already.
-    echo "$cmd" \
-    | if grep '\--state' >/dev/null; then
+        # Check unitd is not configured already.
         echo "$cmd" \
-        | sed 's/ --/\n--/g' \
-        | grep '\--state' \
-        | cut -d' ' -f2;
-    else
-        $cmd --help \
-        | sed -n '/\--state/,+1p' \
-        | grep 'default:' \
-        | sed 's/ *default: "\(.*\)"/\1/';
-    fi \
-    | sed 's,$,/conf.json,' \
-    | xargs test -e \
-    && err 'NGINX Unit is already configured.'
+        | if grep '\--state' >/dev/null; then
+            echo "$cmd" \
+            | sed 's/ --/\n--/g' \
+            | grep '\--state' \
+            | cut -d' ' -f2;
+        else
+            $cmd --help \
+            | sed -n '/\--state/,+1p' \
+            | grep 'default:' \
+            | sed 's/ *default: "\(.*\)"/\1/';
+        fi \
+        | sed 's,$,/conf.json,' \
+        | read -r conffile \
+        ||:;
+
+        if test -e $conffile; then
+            warn 'NGINX Unit is already configured.  If you are sure you want';
+            err  'to overwrite its current configuration, run again with --force.';
+        fi;
+    fi;
 
     unit_ctl_sock -c \
     | read -r curl_opt;

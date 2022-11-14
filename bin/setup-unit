@@ -115,8 +115,11 @@ unit_cmd()
     | read -r nprocs \
     ||:
 
-    test 0 -eq "$nprocs" \
-    && err "NGINX Unit isn't running.";
+    if test 0 -eq "$nprocs"; then
+        warn "NGINX Unit isn't running.";
+        warn "If you don't know how to run it, try reading:";
+        err  "  <https://unit.nginx.org/installation/#startup-and-shutdown>";
+    fi;
 
     test 1 -ne "$nprocs" \
     && err 'Only one NGINX Unit instance should be running.';

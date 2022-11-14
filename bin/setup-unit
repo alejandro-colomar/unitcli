@@ -28,6 +28,31 @@ help_unit()
     echo "      Run '$program_name COMMAND -h' for more information on a command.";
     echo;
     echo 'COMMANDS';
+    echo '      repo-config';
+    echo '              Configure your package manager with the NGINX Unit';
+    echo '              repository for later installation';
+    echo;
+    echo '      welcome Set up a basic configuration on a running instance';
+    echo '              of NGINX Unit.';
+    echo;
+    echo 'OPTIONS';
+    echo '      -h, --help';
+    echo '              Print this help.';
+    echo;
+}
+
+help_more_unit()
+{
+    echo 'SYNOPSIS';
+    echo "      $program_name [-h] COMMAND [ARGS]";
+    echo;
+    echo 'DESCRIPTION';
+    echo '      This script simplifies installing and configuring';
+    echo '      an NGINX Unit server for first-time users.';
+    echo;
+    echo "      Run '$program_name COMMAND -h' for more information on a command.";
+    echo;
+    echo 'COMMANDS';
     echo '      ctl     Control a running unitd(8) instance through its control socket.';
     echo;
     echo '      freeport';
@@ -48,7 +73,10 @@ help_unit()
     echo;
     echo 'OPTIONS';
     echo '      -h, --help';
-    echo '              Print this help.';
+    echo '              Print the basic help (some commands are hidden).';
+    echo;
+    echo '      --help-more';
+    echo '              Print the hidden help with more commands.';
     echo;
 }
 
@@ -980,6 +1008,10 @@ while test -v 1; do
     case "$1" in
     -h | --help)
         help_unit;
+        exit 0;
+        ;;
+    --help-more)
+        help_more_unit;
         exit 0;
         ;;
     -*)

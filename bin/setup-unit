@@ -446,6 +446,12 @@ unit_ctl_welcome()
     test -e "$www" \
     && www="$(mktemp --suffix=.html)";
 
+    unit_ctl_sock -c \
+    | read -r curl_opt;
+
+    curl $curl_opt/ >/dev/null 2>&1 \
+    || err "Can't reach the control socket.";
+
     if ! test -v force; then
         unit_cmd \
         | read -r cmd;
@@ -468,16 +474,13 @@ unit_ctl_welcome()
         ||:;
 
         if test -e $conffile; then
-            warn 'NGINX Unit is already configured.  If you are sure you want';
-            err  'to overwrite its current configuration, run again with --force.';
+            if ! unit_ctl_http 'GET' '/config' </dev/null 2>/dev/null | grep -q '^{}.$';  # In '{}.$', the '.' is for the carriage return.
+            then
+                warn 'NGINX Unit is already configured.  If you are sure you want';
+                err  'to overwrite its current configuration, run again with --force.';
+            fi;
         fi;
     fi;
-
-    unit_ctl_sock -c \
-    | read -r curl_opt;
-
-    curl $curl_opt/ >/dev/null 2>&1 \
-    || err "Can't reach the control socket.";
 
     (
         unit_freeport \

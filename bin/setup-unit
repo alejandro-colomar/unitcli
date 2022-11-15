@@ -30,10 +30,11 @@ help_unit()
     echo 'COMMANDS';
     echo '      repo-config';
     echo '              Configure your package manager with the NGINX Unit';
-    echo '              repository for later installation';
+    echo '              repository for later installation.';
     echo;
-    echo '      welcome Set up a basic configuration on a running instance';
-    echo '              of NGINX Unit.';
+    echo '      welcome';
+    echo '              Creates an initial configuration to serve a welcome web page'
+    echo '              for NGINX Unit.';
     echo;
     echo 'OPTIONS';
     echo '      -h, --help';
@@ -121,7 +122,7 @@ unit_cmd()
 
     if test 0 -eq "$nprocs"; then
         warn "NGINX Unit isn't running.";
-        warn "If you don't know how to run it, try reading:";
+        warn 'For help starting NGINX Unit, see:';
         err  "  <https://unit.nginx.org/installation/#startup-and-shutdown>";
     fi;
 
@@ -397,8 +398,9 @@ unit_ctl_welcome()
         echo "      $program_name welcome [-hn]";
         echo;
         echo 'DESCRIPTION';
-        echo '      This script simplifies configuring a running';
-        echo '      NGINX Unit instance for first-time users.';
+        echo '      This script tests a NGINX Unit instalation by creating an initial';
+        echo '      configuration and serving a welcome web page.  Recommended for';
+        echo '      first-time users.';
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';

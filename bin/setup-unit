@@ -398,7 +398,7 @@ unit_ctl_welcome()
         echo "      $program_name welcome [-hn]";
         echo;
         echo 'DESCRIPTION';
-        echo '      This script tests a NGINX Unit instalation by creating an initial';
+        echo '      This script tests an NGINX Unit instalation by creating an initial';
         echo '      configuration and serving a welcome web page.  Recommended for';
         echo '      first-time users.';
         echo;

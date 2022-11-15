@@ -339,7 +339,7 @@ unit_ctl_sock()
     while test -v 1; do
         case "$1" in
         -c | --curl)
-            local curl_opt='yes';
+            local curl_flag='yes';
             ;;
         -h | --help)
             help_unit_ctl_sock;
@@ -373,7 +373,7 @@ unit_ctl_sock()
     fi \
     | read -r control;
 
-    if ! test -v curl_opt; then
+    if ! test -v curl_flag; then
         echo "$control";
         return 0;
     fi;

@@ -438,7 +438,7 @@ unit_ctl_welcome()
 
     www='/srv/www/unit/index.html';
     test -e "$www" \
-    && www="$(mktemp)";
+    && www="$(mktemp --suffix=.html)";
 
     if ! test -v force; then
         unit_cmd \

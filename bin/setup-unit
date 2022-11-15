@@ -507,36 +507,36 @@ unit_ctl_welcome()
             </head>
             <body>
                 <h1>Welcome to NGINX Unit</h1>
-                <p>Congratulations! NGINX Unit is installed and running</p>
+                <p>Congratulations! NGINX Unit is installed and running.</p>
                 <h3>Useful Links</h3>
                 <ul>
-                    <li><b><a href="https://unit.nginx.org/configuration/?referer=welcome">https://unit.nginx.org/configuration/</a></b></br>
-                        To get started with Unit see the documentation about <em>Configuration</em> and
+                    <li><b><a href="https://unit.nginx.org/configuration/?referer=welcome">https://unit.nginx.org/configuration/</a></b><br>
+                        To get started with Unit, see the <em>Configuration</em> docs, starting with
                         the <em>Quick Start</em> guide.</li>
-                    <li><b><a href="https://github.com/nginx/unit">https://github.com/nginx/unit</a></b></br>
-                        See our GitHub repo for the code, contributing, and getting help from the
+                    <li><b><a href="https://github.com/nginx/unit">https://github.com/nginx/unit</a></b><br>
+                        See our GitHub repo to browse the code, contribute, or seek help from the
                         <a href="https://github.com/nginx/unit#community">community</a>.</li>
                 </ul>
 
                 <h2>Next steps</h2>
 
-                <h3>Check the running configuration</h3>
+                <h3>Check Current Configuration</h3>
                 <div class="indent">
-                <p>By default, Unit listens for configuration changes on the control API Unix socket at
-                <b>'"$(unit_ctl_sock)"'</b></br>Use this command to see the running configuration.</p>
+                <p>By default, Unit'"'"'s control API listens for configuration changes on the socket at
+                <b>'"$(unit_ctl_sock)"'</b><br>To see the current configuration:</p>
                 <pre>sudo curl '"$curl_opt"'/config</pre>
                 </div>
 
-                <h3>Change the listen port</h3>
+                <h3>Change Listener Port</h3>
                 <div class="indent">
-                <p>This page is listening on a random TCP highport. To use the default HTTP port (80)
-                   replace the <b>"listeners"</b> object with the following command.</p>
+                <p>This page is served over a random TCP high port.  To choose the default HTTP port (80),
+                   replace the <b>"listeners"</b> object:</p>
                 <pre>echo '"'"'{"*:80": {"pass": "routes"}}'"'"' | sudo curl -X PUT -d@- '"$curl_opt"'/config/listeners</pre>
-                Then load this page again by removing the port number.
+                Then remove the port number from the address bar and reload the page.
                 </div>
 
                 <hr>
-                <p><a href="https://unit.nginx.org/?referer=welcome">NGINX Unit - the universal web app server</a></br>
+                <p><a href="https://unit.nginx.org/?referer=welcome">NGINX Unit &mdash; the universal web app server</a><br>
                 NGINX, Inc. &copy; 2022</p>
             </body>
         </html>

@@ -523,7 +523,7 @@ unit_ctl_welcome()
                 <h3>Check the running configuration</h3>
                 <div class="indent">
                 <p>By default, Unit listens for configuration changes on the control API Unix socket at
-                <b>/var/run/control.unit.sock</b></br>Use this command to see the running configuration.</p>
+                <b>'"$(unit_ctl_sock)"'</b></br>Use this command to see the running configuration.</p>
                 <pre>sudo curl '"$curl_opt"'/config</pre>
                 </div>
 

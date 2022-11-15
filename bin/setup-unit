@@ -39,6 +39,10 @@ help_unit()
     echo '      -h, --help';
     echo '              Print this help.';
     echo;
+    echo '      --help-more';
+    echo '              Print help for more commands.  They are experimental.';
+    echo "              This is not recommended unless you know what you're doing.";
+    echo;
 }
 
 help_more_unit()

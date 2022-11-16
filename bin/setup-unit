@@ -522,7 +522,8 @@ unit_ctl_welcome()
 
                 <h3>Check Current Configuration</h3>
                 <div class="indent">
-                <p>By default, Unit'"'"'s control API listens for configuration changes on the socket at
+                <p>By default, Unit'"'"'s control API listens for configuration changes
+                   on the '"$(unit_ctl_sock | grep -q '^unix:' && echo '<a href="https://en.wikipedia.org/wiki/Unix_domain_socket">Unix socket</a>')"' at
                 <b>'"$(unit_ctl_sock)"'</b><br>To see the current configuration:</p>
                 <pre>sudo curl '"$curl_opt"'/config</pre>
                 </div>

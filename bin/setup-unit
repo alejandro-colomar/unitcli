@@ -7,6 +7,17 @@
 #
 #####################################################################
 
+
+if test -n ${BASH_VERSION} && test "${BASH_VERSINFO[0]}" -eq 3; then
+    >&2 echo 'Your version of bash(1) is not supported by this script.';
+    >&2 echo "You're probably running on MacOS.  We recommend that you either";
+    >&2 echo 'install a newer version of bash(1), or you run this script with';
+    >&2 echo 'another shell, like for example zsh(1):';
+    >&2 echo "    $ zsh ${SUDO_USER:+sudo }$0 ...";
+    exit 1;
+fi;
+
+
 set -Eefuo pipefail;
 
 test -v BASH_VERSION \

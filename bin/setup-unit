@@ -8,7 +8,9 @@
 #####################################################################
 
 set -Eefuo pipefail;
-shopt -s lastpipe;
+
+test -v BASH_VERSION \
+&& shopt -s lastpipe;
 
 export LC_ALL=C
 

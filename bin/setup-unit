@@ -357,7 +357,8 @@ unit_ctl_sock()
         echo "      $program_name ctl sock [-ch]";
         echo;
         echo 'DESCRIPTION';
-        echo '      Print the address of the control socket.';
+        echo '      Print the address of the control API socket of';
+        echo '      running instances of unitd(8).';
         echo;
         echo 'OPTIONS';
         echo '      -c, --curl';
@@ -388,36 +389,37 @@ unit_ctl_sock()
     done;
 
     unit_cmd \
-    | read -r cmd;
+    | while read -r cmd; do
 
-    echo "$cmd" \
-    | if grep '\--control' >/dev/null; then
         echo "$cmd" \
-        | sed 's/ --/\n--/g' \
-        | grep '\--control' \
-        | cut -d' ' -f2;
-    else
-        $cmd --help \
-        | sed -n '/\--control/,+1p' \
-        | grep 'default:' \
-        | sed 's/ *default: "\(.*\)"/\1/';
-    fi \
-    | read -r control;
+        | if grep '\--control' >/dev/null; then
+            echo "$cmd" \
+            | sed 's/ --/\n--/g' \
+            | grep '\--control' \
+            | cut -d' ' -f2;
+        else
+            $cmd --help \
+            | sed -n '/\--control/,+1p' \
+            | grep 'default:' \
+            | sed 's/ *default: "\(.*\)"/\1/';
+        fi \
+        | read -r control;
 
-    if ! test -v curl_flag; then
-        echo "$control";
-        return 0;
-    fi;
+        if ! test -v curl_flag; then
+            echo "$control";
+            return 0;
+        fi;
 
-    if echo "$control" | grep '^unix:' >/dev/null; then
-        unix_socket="$(echo "$control" | sed 's/unix:/--unix-socket /')";
-        host='localhost';
-    else
-        unix_socket='';
-        host="$control";
-    fi;
+        if echo "$control" | grep '^unix:' >/dev/null; then
+            unix_socket="$(echo "$control" | sed 's/unix:/--unix-socket /')";
+            host='localhost';
+        else
+            unix_socket='';
+            host="$control";
+        fi;
 
-    echo "$unix_socket http://$host";
+        echo "$unix_socket http://$host";
+    done;
 }
 
 

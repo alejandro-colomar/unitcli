@@ -71,6 +71,8 @@ help_more_unit()
     echo "      Run '$program_name COMMAND -h' for more information on a command.";
     echo;
     echo 'COMMANDS';
+    echo '      cmd     Print the invocation line of unitd(8).';
+    echo;
     echo '      ctl     Control a running unitd(8) instance through its control socket.';
     echo;
     echo '      freeport';
@@ -128,6 +130,36 @@ dry_run_eval()
 
 unit_cmd()
 {
+    help_unit_cmd()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name cmd [-h]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Print the invocation line of unitd(8).';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_cmd;
+            exit 0;
+            ;;
+        -*)
+            >&2 help_unit_cmd;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
     unit_ps -t m \
     | wc -l \
     | read -r nprocs \
@@ -1119,6 +1151,10 @@ if test ! -v 1; then
 fi;
 
 case $1 in
+cmd)
+    shift;
+    unit_cmd $@;
+    ;;
 ctl)
     shift;
     unit_ctl $@;

@@ -456,9 +456,9 @@ unit_ctl_welcome()
     || err 'curl(1) not found in PATH.  It must be installed to run this script.';
 
     www='/srv/www/unit/index.html';
-    test -e "$www" \
-    && ! test -v force \
-    && www="$(mktemp --suffix=.html)";
+    if test -e "$www" && ! test -v force || ! test -w /srv; then
+        www="$(mktemp --suffix=.html)";
+    fi;
 
     unit_ctl_sock -c \
     | read -r curl_opt;

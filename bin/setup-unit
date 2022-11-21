@@ -848,23 +848,23 @@ unit_os_probe()
 
         if [ -f "$osRelease" ]; then
             # The value for the ID and VERSION_ID may or may not be in quotes
-            osName=$(grep "^ID=" "$osRelease" | sed s/\"//g | awk -F= '{ print $2 }')
-            osVersion=$(grep '^VERSION_ID=' "$osRelease" | sed s/\"//g | awk -F= '{ print $2 }')
+            osName=$(grep "^ID=" "$osRelease" | sed s/\"//g | awk -F= '{ print $2 }' ||:)
+            osVersion=$(grep '^VERSION_ID=' "$osRelease" | sed s/\"//g | awk -F= '{ print $2 }' ||:)
         else
             # rhel or centos 6.*
             if rpm -q redhat-release-server >/dev/null 2>&1; then
                 osName=rhel
-                osVersion=$(rpm -q redhat-release-server |sed 's/.*-//' | awk -F. '{print $1"."$2;}')
+                osVersion=$(rpm -q redhat-release-server | sed 's/.*-//' | awk -F. '{print $1"."$2;}' ||:)
             elif rpm -q centos-release >/dev/null 2>&1; then
                 osName=centos
-                osVersion=$(rpm -q centos-release | sed 's/centos-release-//' | sed 's/\..*//' | awk -F- '{print $1"."$2;}')
+                osVersion=$(rpm -q centos-release | sed 's/centos-release-//' | sed 's/\..*//' | awk -F- '{print $1"."$2;}' ||:)
             else
                 err "Unable to determine OS and version, or the OS isn't supported"
             fi
         fi
     else
         osName=$os
-        osVersion=$(uname -rs | awk -F '[ -]' '{print $2}')
+        osVersion=$(uname -rs | awk -F '[ -]' '{print $2}' ||:)
         if [ -z "$osVersion" ]; then
             err 'Unable to get the FreeBSD version'
         fi

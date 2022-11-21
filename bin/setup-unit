@@ -136,7 +136,7 @@ unit_cmd()
         echo "      $program_name cmd [-h]";
         echo;
         echo 'DESCRIPTION';
-        echo '      Print the invocation line of unitd(8).';
+        echo '      Print the invocation line of running instances of unitd(8).';
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';
@@ -159,20 +159,6 @@ unit_cmd()
         esac;
         shift;
     done;
-
-    unit_ps -t m \
-    | wc -l \
-    | read -r nprocs \
-    ||:
-
-    if test 0 -eq "$nprocs"; then
-        warn "NGINX Unit isn't running.";
-        warn 'For help starting NGINX Unit, see:';
-        err  "  <https://unit.nginx.org/installation/#startup-and-shutdown>";
-    fi;
-
-    test 1 -ne "$nprocs" \
-    && err 'Only one NGINX Unit instance should be running.';
 
     unit_ps -t m \
     | sed 's/.*\[\(.*\)].*/\1/';
@@ -492,6 +478,19 @@ unit_ctl_welcome()
         www="$(mktemp)";
         mv "$www" "$www.html";
         www="$www.html"
+    fi;
+
+    unit_ps -t m \
+    | wc -l \
+    | read -r nprocs \
+    ||:
+
+    if test 0 -eq "$nprocs"; then
+        warn "NGINX Unit isn't running.";
+        warn 'For help starting NGINX Unit, see:';
+        err  "  <https://unit.nginx.org/installation/#startup-and-shutdown>";
+    elif test 1 -ne "$nprocs"; then
+        err 'Only one NGINX Unit instance should be running.';
     fi;
 
     unit_ctl_sock -c \

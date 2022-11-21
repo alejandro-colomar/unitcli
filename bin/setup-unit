@@ -488,7 +488,7 @@ unit_ctl_welcome()
         ||:;
 
         if test -e $conffile; then
-            if ! unit_ctl_http 'GET' '/config' </dev/null 2>/dev/null | grep -q '^{}.$';  # In '{}.$', the '.' is for the carriage return.
+            if ! unit_ctl_http 'GET' '/config' </dev/null 2>/dev/null | grep -q '^{}.\?$';  # The '.\?' is for the possible carriage return.
             then
                 warn 'NGINX Unit is already configured.  If you are sure you want';
                 err  'to overwrite its current configuration, run again with --force.';

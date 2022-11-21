@@ -457,7 +457,9 @@ unit_ctl_welcome()
 
     www='/srv/www/unit/index.html';
     if test -e "$www" && ! test -v force || ! test -w /srv; then
-        www="$(mktemp --suffix=.html)";
+        www="$(mktemp)";
+        mv "$www" "$www.html";
+        www="$www.html"
     fi;
 
     unit_ctl_sock -c \

@@ -296,12 +296,12 @@ unit_ctl_http()
     fi;
 
     local method="$1";
-    local path="$2";
+    local req_path="$2";
 
     unit_ctl_sock -c \
     | read -r curl_opt;
 
-    dry_run_eval "curl -X $method -d@- ${curl_opt}${path};";
+    dry_run_eval "curl -X $method -d@- ${curl_opt}${req_path};";
 }
 
 
@@ -348,7 +348,7 @@ unit_ctl_insert()
         exit 1;
     fi;
 
-    local path="$1";
+    local req_path="$1";
     local idx="$2";
 
     local old="$(mktemp)";
@@ -356,10 +356,10 @@ unit_ctl_insert()
     unit_ctl_sock -c \
     | read -r curl_opt;
 
-    curl -X GET ${curl_opt}${path} >"$old" 2>/dev/null;
+    curl -X GET ${curl_opt}${req_path} >"$old" 2>/dev/null;
 
     unit_json_ins "$old" "$idx" \
-    | unit_ctl_http PUT "$path";
+    | unit_ctl_http PUT "$req_path";
 }
 
 

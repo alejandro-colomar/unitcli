@@ -569,7 +569,7 @@ unit_ctl_welcome()
 
                 <h3>Check Current Configuration</h3>
                 <div class="indent">
-                <p>By default, Unit'"'"'s control API listens for configuration changes
+                <p>Unit'"'"'s control API is currently listening for configuration changes
                    on the '"$(unit_ctl_sock | grep -q '^unix:' && echo '<a href="https://en.wikipedia.org/wiki/Unix_domain_socket">Unix socket</a>' || echo 'socket')"' at
                 <b>'"$(unit_ctl_sock)"'</b><br>To see the current configuration:</p>
                 <pre>'"${SUDO_USER:+sudo }"'curl '"$curl_opt"'/config</pre>

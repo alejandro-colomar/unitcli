@@ -851,16 +851,7 @@ unit_os_probe()
             osName=$(grep "^ID=" "$osRelease" | sed s/\"//g | awk -F= '{ print $2 }' ||:)
             osVersion=$(grep '^VERSION_ID=' "$osRelease" | sed s/\"//g | awk -F= '{ print $2 }' ||:)
         else
-            # rhel or centos 6.*
-            if rpm -q redhat-release-server >/dev/null 2>&1; then
-                osName=rhel
-                osVersion=$(rpm -q redhat-release-server | sed 's/.*-//' | awk -F. '{print $1"."$2;}' ||:)
-            elif rpm -q centos-release >/dev/null 2>&1; then
-                osName=centos
-                osVersion=$(rpm -q centos-release | sed 's/centos-release-//' | sed 's/\..*//' | awk -F- '{print $1"."$2;}' ||:)
-            else
-                err "Unable to determine OS and version, or the OS isn't supported"
-            fi
+            err "Unable to determine OS and version, or the OS isn't supported"
         fi
     else
         osName=$os

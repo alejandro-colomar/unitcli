@@ -939,11 +939,25 @@ unit_repo_config()
     help_unit_repo_config()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name repo-config [-hn]";
+        echo "      $program_name repo-config [-hn] [OS-NAME [OS-VERSION]]";
         echo;
         echo 'DESCRIPTION';
         echo '      This script configures the NGINX Unit repository';
         echo '      on Amazon Linux, CentOS, Debian, Fedora, Oracle Linux, Red Hat, or Ubuntu.';
+        echo;
+        echo '      The script automatically detects your OS, and works accordingly.';
+        echo '      However, in case the detection fails, you may specify the name and version.';
+        echo '      The supported OS names and versions are:';
+        echo;
+        echo '      debian: The version is ignored.';
+        echo '      ubuntu: The version is ignored.';
+        echo '      fedora: The version is ignored.';
+        echo '      rhel:   7 7.* 8 8.*';
+        echo '      centos: 7 7.* 8 8.*';
+        echo '      ol:     7 7.* 8 8.*';
+        echo '      amzn:   1 *';
+        echo;
+        echo '      The list of supported OS names and versions may change.';
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';
@@ -985,11 +999,14 @@ unit_repo_config()
 
     installRedHat ()
     {
+        local os_name="$1";
+        local os_version="$2";
+
         dry_run_echo 'Install on Red Hat/CentOS/Oracle';
         dry_run_echo;
 
-        case "$osVersion" in
-            6|6.*|7|7.*|8|8.*)
+        case "$os_version" in
+            7|7.*|8|8.*)
                 dry_run_eval 'cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
@@ -999,7 +1016,7 @@ enabled=1
 __EOF__';
                 ;;
             *)
-                err "Unsupported $osName version: $osVersion"
+                err "Unsupported $os_name version: $os_version"
                 ;;
         esac
 
@@ -1009,10 +1026,12 @@ __EOF__';
 
     installAmazon ()
     {
+        local os_version="$2";
+
         dry_run_echo 'Install on Amazon';
         dry_run_echo;
 
-        case "$osVersion" in
+        case "$os_version" in
             2)
                 dry_run_eval 'cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
@@ -1074,6 +1093,13 @@ __EOF__';
         shift;
     done;
 
+    if test -v 1; then
+        local override_os_name="$1";
+    fi;
+    if test -v 2; then
+        local override_os_version="$2";
+    fi;
+
     command -v curl >/dev/null \
     || err 'curl(1) not found in PATH.  It must be installed to run this script.';
 
@@ -1083,41 +1109,49 @@ __EOF__';
 
     echo 'This script sets up the NGINX Unit repository';
 
-    osNameVersion=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
-    os=$(echo "$osNameVersion" | awk -F: '{print $1}')
-    osName=$(echo "$osNameVersion" | awk -F: '{print $2}')
-    osVersion=$(echo "$osNameVersion" | awk -F: '{print $3}')
+    if test ! -v 2; then
+        os_name_version=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
+        os_name=$(echo "$os_name_version" | awk -F: '{print $2}')
+        os_version=$(echo "$os_name_version" | awk -F: '{print $3}')
+    fi;
+
+    if test -v override_os_name; then
+        local os_name="$override_os_name";
+    fi;
+    if test -v override_os_version; then
+        local os_version="$override_os_version";
+    fi;
 
     # Call the appropriate installation function
-    case "$osName" in
+    case "$os_name" in
     debian)
-        installDebian
+        installDebian "$os_name" "$os_version"
         ;;
     ubuntu)
-        installUbuntu
+        installUbuntu "$os_name" "$os_version"
         ;;
     rhel)
-        installRedHat
+        installRedHat "$os_name" "$os_version"
         ;;
     centos)
-        installRedHat
+        installRedHat "$os_name" "$os_version"
         ;;
     ol)
-        installRedHat
+        installRedHat "$os_name" "$os_version"
         ;;
     amzn)
-        installAmazon
+        installAmazon "$os_name" "$os_version"
         ;;
     fedora)
-        installFedora
+        installFedora "$os_name" "$os_version"
         ;;
     *)
-        err "$osName isn't supported"
+        err "$os_name isn't supported"
         ;;
     esac
 
     echo
-    echo "All done; the NGINX Unit repository for "$osName" "$osVersion" is set up."
+    echo "All done; the NGINX Unit repository for "$os_name" "$os_version" is set up."
     echo 'Further steps: https://unit.nginx.org/installation/#official-packages'
 }
 

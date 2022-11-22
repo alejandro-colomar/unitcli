@@ -1010,7 +1010,7 @@ unit_repo_config()
                 dry_run_eval 'cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
-baseurl=https://packages.nginx.org/unit/rhel/$releasever/$basearch/
+baseurl=https://packages.nginx.org/unit/rhel/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
 __EOF__';
@@ -1036,7 +1036,7 @@ __EOF__';
                 dry_run_eval 'cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
-baseurl=https://packages.nginx.org/unit/amzn2/$releasever/$basearch/
+baseurl=https://packages.nginx.org/unit/amzn2/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
 __EOF__';
@@ -1045,7 +1045,7 @@ __EOF__';
                 dry_run_eval 'cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
-baseurl=https://packages.nginx.org/unit/amzn/$releasever/$basearch/
+baseurl=https://packages.nginx.org/unit/amzn/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
 __EOF__';
@@ -1064,7 +1064,7 @@ __EOF__';
         dry_run_eval 'cat << __EOF__ > /etc/yum.repos.d/unit.repo
 [unit]
 name=unit repo
-baseurl=https://packages.nginx.org/unit/fedora/$releasever/$basearch/
+baseurl=https://packages.nginx.org/unit/fedora/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
 __EOF__';

@@ -812,8 +812,8 @@ unit_os_probe()
         echo;
         echo 'DESCRIPTION';
         echo '      This script probes the OS, and prints details about the version.';
-        echo "      It prints three fields, delimited by ':'; the first is the OS,";
-        echo '      the second is the OS name, and the third is the OS version.';
+        echo "      It prints two fields, delimited by ':'; the first is the OS name,";
+        echo '      and the second is the OS version.';
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';
@@ -862,7 +862,7 @@ unit_os_probe()
     fi
 
     osName=$(echo "$osName" | tr '[:upper:]' '[:lower:]')
-    echo "$os:$osName:$osVersion"
+    echo "$osName:$osVersion"
 }
 
 
@@ -1111,8 +1111,8 @@ __EOF__';
 
     if test ! -v 2; then
         os_name_version=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
-        os_name=$(echo "$os_name_version" | awk -F: '{print $2}')
-        os_version=$(echo "$os_name_version" | awk -F: '{print $3}')
+        os_name=$(echo "$os_name_version" | awk -F: '{print $1}')
+        os_version=$(echo "$os_name_version" | awk -F: '{print $2}')
     fi;
 
     if test -v override_os_name; then

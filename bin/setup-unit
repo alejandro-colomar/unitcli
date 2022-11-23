@@ -939,7 +939,7 @@ unit_repo_config()
     help_unit_repo_config()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name repo-config [-hn] [OS-NAME [OS-VERSION]]";
+        echo "      $program_name repo-config [-hn] [OS-NAME OS-VERSION]";
         echo;
         echo 'DESCRIPTION';
         echo '      This script configures the NGINX Unit repository on';
@@ -1094,11 +1094,13 @@ __EOF__';
         shift;
     done;
 
-    if test -v 1; then
-        local override_os_name="$1";
+    if test -v 1 && ! test -v 2; then
+        >&2 help_unit_repo_config;
+        exit 1;
     fi;
     if test -v 2; then
-        local override_os_version="$2";
+        local os_name="$1";
+        local os_version="$2";
     fi;
 
     command -v curl >/dev/null \
@@ -1111,16 +1113,9 @@ __EOF__';
     echo 'This script sets up the NGINX Unit repository';
 
     if test ! -v 2; then
-        os_name_version=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
-        os_name=$(echo "$os_name_version" | awk -F: '{print $1}')
-        os_version=$(echo "$os_name_version" | awk -F: '{print $2}')
-    fi;
-
-    if test -v override_os_name; then
-        local os_name="$override_os_name";
-    fi;
-    if test -v override_os_version; then
-        local os_version="$override_os_version";
+        local os_name_version=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
+        local os_name=$(echo "$os_name_version" | awk -F: '{print $1}')
+        local os_version=$(echo "$os_name_version" | awk -F: '{print $2}')
     fi;
 
     # Call the appropriate installation function

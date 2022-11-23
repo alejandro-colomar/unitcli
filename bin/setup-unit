@@ -942,12 +942,12 @@ unit_repo_config()
         echo "      $program_name repo-config [-hn] [OS-NAME [OS-VERSION]]";
         echo;
         echo 'DESCRIPTION';
-        echo '      This script configures the NGINX Unit repository';
-        echo '      on Amazon Linux, CentOS, Debian, Fedora, Oracle Linux, Red Hat, or Ubuntu.';
+        echo '      This script configures the NGINX Unit repository on';
+        echo '      Amazon Linux, CentOS, Debian, Fedora, Oracle Linux, Red Hat, or Ubuntu.';
         echo;
         echo '      The script automatically detects your OS, and works accordingly.';
-        echo '      However, in case the detection fails, you may specify the name and version.';
-        echo '      The supported OS names and versions are:';
+        echo '      However, in case the detection fails, you may specify the name and';
+        echo '      version.  The supported OS names and versions are:';
         echo;
         echo '      debian: The version is ignored.';
         echo '      ubuntu: The version is ignored.';

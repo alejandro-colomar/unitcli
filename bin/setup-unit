@@ -71,7 +71,7 @@ help_more_unit()
     echo '   Subcommands';
     echo '      +-- cmd          [-h]';
     echo '      +-- ctl          [-h] SUBCOMMAND [ARGS]';
-    echo '      |   +-- http     [-hn] METHOD PATH';
+    echo '      |   +-- http     [-hn] [-c CURLOPT] METHOD PATH';
     echo '      |   +-- insert   [-h] PATH INDEX';
     echo '      |   +-- sock     [-ch]';
     echo '      +-- freeport     [-h]';
@@ -193,7 +193,7 @@ unit_ctl()
         echo "      $program_name ctl [-h] SUBCOMMAND [ARGS]";
         echo;
         echo '   Subcommands';
-        echo '      +-- http    [-hn] METHOD PATH';
+        echo '      +-- http    [-hn] [-c CURLOPT] METHOD PATH';
         echo '      +-- insert  [-h] PATH INDEX';
         echo '      +-- sock    [-ch]';
         echo;
@@ -265,7 +265,7 @@ unit_ctl_http()
     help_unit_ctl_http()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name ctl http [-hn] METHOD PATH";
+        echo "      $program_name ctl http [-hn] [-c CURLOPT] METHOD PATH";
         echo;
         echo 'DESCRIPTION';
         echo '      Send an HTTP request to the unitd(8) control socket.';
@@ -273,8 +273,8 @@ unit_ctl_http()
         echo '      The payload is read from standard input.';
         echo;
         echo 'OPTIONS';
-        echo '      -c, --curl OPTION';
-        echo '              Pass OPTION as an option to curl.  This script is';
+        echo '      -c, --curl CURLOPT';
+        echo '              Pass CURLOPT as an option to curl.  This script is';
         echo "              implemented in terms of curl(1), so it's useful to";
         echo '              be able to tweak its behavior.';
         echo;

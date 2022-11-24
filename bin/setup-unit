@@ -1029,18 +1029,18 @@ __EOF__";
         dry_run_eval 'yum makecache;';
     }
 
-    installFedora ()
+    installDnf ()
     {
-        dry_run_echo 'Install on Fedora';
+        dry_run_echo "Install on $os_name";
         dry_run_echo;
 
-        dry_run_eval 'cat >/etc/yum.repos.d/unit.repo <<__EOF__
+        dry_run_eval "cat >/etc/yum.repos.d/unit.repo <<__EOF__
 [unit]
 name=unit repo
-baseurl=https://packages.nginx.org/unit/fedora/\$releasever/\$basearch/
+baseurl=https://packages.nginx.org/unit/$os_name/\\\$releasever/\\\$basearch/
 gpgcheck=0
 enabled=1
-__EOF__';
+__EOF__";
 
         dry_run_echo;
         dry_run_eval 'dnf makecache;';

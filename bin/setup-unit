@@ -336,9 +336,6 @@ unit_ctl_insert()
             help_unit_ctl_insert;
             exit 0;
             ;;
-        -n | --dry-run)
-            dry_run='yes';
-            ;;
         -*)
             >&2 help_unit_ctl_insert;
             exit 1;

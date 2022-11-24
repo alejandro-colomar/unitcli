@@ -360,10 +360,7 @@ unit_ctl_insert()
 
     local old="$(mktemp)";
 
-    unit_ctl_sock -c \
-    | read -r curl_opt;
-
-    curl -X GET ${curl_opt}${req_path} >"$old" 2>/dev/null;
+    unit_ctl_http -c --no-progress-meter GET "$req_path" </dev/null >"$old";
 
     unit_json_ins "$old" "$idx" \
     | unit_ctl_http PUT "$req_path";

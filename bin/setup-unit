@@ -908,6 +908,10 @@ unit_ps()
             exit 0;
             ;;
         -t | --type)
+            if test ! -v 2; then
+                >&2 help_unit_ps;
+                exit 1;
+            fi;
             local type=;
             case "$2" in
             c | controller)

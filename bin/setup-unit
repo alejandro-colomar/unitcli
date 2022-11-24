@@ -966,22 +966,25 @@ unit_repo_config()
     help_unit_repo_config()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name repo-config [-hn] [OS-NAME OS-VERSION]";
+        echo "      $program_name repo-config [-hn] [PKG-MANAGER OS-NAME OS-VERSION]";
         echo;
         echo 'DESCRIPTION';
         echo '      This script configures the NGINX Unit repository on';
         echo '      Amazon Linux, CentOS, Debian, Fedora, Oracle Linux, Red Hat, or Ubuntu.';
         echo;
         echo '      The script automatically detects your OS, and works accordingly.';
-        echo '      However, in case the detection fails, you may specify the name and';
-        echo '      version.  The supported OS names and versions are:';
+        echo '      However, in case the detection fails, you may specify the package';
+        echo '      manager and the OS name and version.  The supported package managers,';
+        echo '      OS names and versions are:';
         echo;
-        echo '      debian  jessie, stretch, buster, bullseye';
-        echo '      ubuntu  artful, bionic, cosmic, disco, eoan, focal,';
-        echo '              groovy, hirsute, impish, jammy, xenial, zesty';
-        echo '      fedora  28, 29, 30, 31, 32, 33, 34, 35, 36';
-        echo '      rhel    7, 8';
-        echo '      amzn    2';
+        echo '      apt';
+        echo '              debian  jessie, stretch, buster, bullseye';
+        echo '              ubuntu  artful, bionic, cosmic, disco, eoan, focal,';
+        echo '                      groovy, hirsute, impish, jammy, xenial, zesty';
+        echo '      yum | dnf';
+        echo '              fedora  28, 29, 30, 31, 32, 33, 34, 35, 36';
+        echo '              rhel    7, 8';
+        echo '              amzn    2';
         echo;
         echo '      The list of supported OS names and versions may change.';
         echo;
@@ -999,16 +1002,16 @@ unit_repo_config()
 
     installAPT ()
     {
-        local os_name="$1";
+        local os_name="$2";
 
         dry_run_echo "Install on $os_name";
         dry_run_echo;
         dry_run_eval 'curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg;';
         dry_run_echo;
-        dry_run_eval 'apt install -y apt-transport-https lsb-release ca-certificates;';
+        dry_run_eval 'apt-get install -y apt-transport-https lsb-release ca-certificates;';
 
         if test -v 3; then
-            local os_version="$2";
+            local os_version="$3";
         else
             local os_version='$(lsb_release -cs)';
         fi;
@@ -1017,13 +1020,19 @@ unit_repo_config()
         dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/$os_name/ %s unit\n' \"$os_version\" | tee /etc/apt/sources.list.d/unit.list;";
         dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/$os_name/ %s unit\n' \"$os_version\" | tee -a /etc/apt/sources.list.d/unit.list;";
         dry_run_echo;
-        dry_run_eval 'apt update;';
+        dry_run_eval 'apt-get update;';
     }
 
-    installYum ()
+    installYumDnf ()
     {
-        local os_name="$1";
-        local os_version="$2";
+        local pkg_mngr="$1";
+        local os_name="$2";
+
+        if test -v 3; then
+            local os_version="$3";
+        else
+            local os_version='\$releasever';
+        fi;
 
         dry_run_echo "Install on $os_name";
         dry_run_echo;
@@ -1031,30 +1040,13 @@ unit_repo_config()
         dry_run_eval "cat >/etc/yum.repos.d/unit.repo <<__EOF__
 [unit]
 name=unit repo
-baseurl=https://packages.nginx.org/unit/$os_name/\\\$releasever/\\\$basearch/
+baseurl=https://packages.nginx.org/unit/$os_name/$os_version/\\\$basearch/
 gpgcheck=0
 enabled=1
 __EOF__";
 
         dry_run_echo;
-        dry_run_eval 'yum makecache;';
-    }
-
-    installDnf ()
-    {
-        dry_run_echo "Install on $os_name";
-        dry_run_echo;
-
-        dry_run_eval "cat >/etc/yum.repos.d/unit.repo <<__EOF__
-[unit]
-name=unit repo
-baseurl=https://packages.nginx.org/unit/$os_name/\\\$releasever/\\\$basearch/
-gpgcheck=0
-enabled=1
-__EOF__";
-
-        dry_run_echo;
-        dry_run_eval 'dnf makecache;';
+        dry_run_eval "$pkg_mngr makecache;";
     }
 
     while test -v 1; do
@@ -1077,13 +1069,14 @@ __EOF__";
         shift;
     done;
 
-    if test -v 1 && ! test -v 2; then
+    if test -v 1 && ! test -v 3; then
         >&2 help_unit_repo_config;
         exit 1;
     fi;
-    if test -v 2; then
-        local os_name="$1";
-        local os_version="$2";
+    if test -v 3; then
+        local pkg_mngr="$1";
+        local os_name="$2";
+        local os_version="$3";
     fi;
 
     command -v curl >/dev/null \
@@ -1095,37 +1088,44 @@ __EOF__";
 
     echo 'This script sets up the NGINX Unit repository';
 
-    if test ! -v 2; then
-        local os_name_version=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
-        local os_name=$(echo "$os_name_version" | awk -F: '{print $1}')
-        local os_version=$(echo "$os_name_version" | awk -F: '{print $2}')
+    if test ! -v 3; then
+        local os_pkg_name_version=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
+        local pkg_mngr=$(echo "$os_pkg_name_version" | awk -F: '{print $1}')
+        local os_name=$(echo "$os_pkg_name_version" | awk -F: '{print $2}')
+        local os_version=$(echo "$os_pkg_name_version" | awk -F: '{print $3}')
     fi;
 
     # Call the appropriate installation function
-    case "$os_name" in
-    debian)
-        installAPT "$os_name" "$os_version" ${2:+ovr}
+    case "$pkg_mngr" in
+    apt)
+        case "$os_name" in
+        debian | ubuntu)
+            installAPT "$pkg_mngr" "$os_name" ${3:+$os_version};
+            ;;
+        *)
+            err "$os_name isn't supported";
+            ;;
+        esac
         ;;
-    ubuntu)
-        installAPT "$os_name" "$os_version" ${2:+ovr}
-        ;;
-    rhel)
-        installYum "$os_name" "$os_version" ${2:+ovr}
-        ;;
-    amzn)
-        installYum "$os_name" "$os_version" ${2:+ovr}
-        ;;
-    fedora)
-        installFedora "$os_name" "$os_version" ${2:+ovr}
+    yum | dnf)
+        case "$os_name" in
+        rhel | amzn | fedora)
+            installYumDnf "$pkg_mngr" "$os_name" "$os_version" ${3:+ovr};
+            ;;
+        *)
+            err "$os_name isn't supported";
+            ;;
+        esac;
         ;;
     *)
-        err "$os_name isn't supported"
+        err "$pkg_mngr isn't supported";
         ;;
-    esac
+    esac;
 
     echo
-    echo "All done; the NGINX Unit repository for "$os_name" "$os_version" is set up."
-    echo 'Further steps: https://unit.nginx.org/installation/#official-packages'
+    echo "All done; the NGINX Unit repository for '$pkg_mngr' in '$os_name'";
+    echo "'$os_version' is set up.";
+    echo 'Further steps: <https://unit.nginx.org/installation/#official-packages>'
 }
 
 

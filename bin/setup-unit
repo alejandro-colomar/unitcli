@@ -1145,8 +1145,8 @@ __EOF__";
     esac;
 
     echo
-    echo "All done; the NGINX Unit repository for '$pkg_mngr' in '$os_name'";
-    echo "'$os_version' is set up.";
+    echo "All done; the NGINX Unit repository for '$pkg_mngr' in";
+    echo "'$os_name' '$os_version' is set up.";
     echo 'Further steps: <https://unit.nginx.org/installation/#official-packages>'
 }
 

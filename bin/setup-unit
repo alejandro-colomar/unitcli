@@ -970,11 +970,11 @@ unit_repo_config()
         echo '              groovy, hirsute, impish, jammy, xenial, zesty';
         echo '      fedora  28, 29, 30, 31, 32, 33, 34, 35, 36';
         echo '      rhel    7, 8';
-        echo '      centos  7, 8';
-        echo '      ol      7, 8';
         echo '      amzn    2';
         echo;
         echo '      The list of supported OS names and versions may change.';
+        echo;
+        echo "      For CentOS and Oracle Linux, you should specify 'rhel'.";
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';
@@ -1017,20 +1017,13 @@ unit_repo_config()
         dry_run_echo 'Install on Red Hat/CentOS/Oracle';
         dry_run_echo;
 
-        case "$os_version" in
-            7|7.*|8|8.*)
-                dry_run_eval 'cat >/etc/yum.repos.d/unit.repo <<__EOF__
+        dry_run_eval 'cat >/etc/yum.repos.d/unit.repo <<__EOF__
 [unit]
 name=unit repo
 baseurl=https://packages.nginx.org/unit/rhel/\$releasever/\$basearch/
 gpgcheck=0
 enabled=1
 __EOF__';
-                ;;
-            *)
-                err "Unsupported $os_name version: $os_version"
-                ;;
-        esac
 
         dry_run_echo;
         dry_run_eval 'yum makecache;';
@@ -1138,12 +1131,6 @@ __EOF__';
         installAPT "$os_name" "$os_version" ${2:+ovr}
         ;;
     rhel)
-        installRedHat "$os_name" "$os_version" ${2:+ovr}
-        ;;
-    centos)
-        installRedHat "$os_name" "$os_version" ${2:+ovr}
-        ;;
-    ol)
         installRedHat "$os_name" "$os_version" ${2:+ovr}
         ;;
     amzn)

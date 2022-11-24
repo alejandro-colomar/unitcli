@@ -34,6 +34,10 @@ help_unit()
     echo 'SYNOPSIS';
     echo "      $program_name [-h] COMMAND [ARGS]";
     echo;
+    echo '   Subcommands';
+    echo '      +-- repo-config  [-hn] [PKG-MANAGER OS-NAME OS-VERSION]';
+    echo '      +-- welcome      [-hn]';
+    echo;
     echo 'DESCRIPTION';
     echo '      This script simplifies installing and configuring';
     echo '      an NGINX Unit server for first-time users.';
@@ -63,6 +67,19 @@ help_more_unit()
 {
     echo 'SYNOPSIS';
     echo "      $program_name [-h] COMMAND [ARGS]";
+    echo;
+    echo '   Subcommands';
+    echo '      +-- cmd          [-h]';
+    echo '      +-- ctl          [-h] SUBCOMMAND [ARGS]';
+    echo '      |   +-- http     [-hn] METHOD PATH';
+    echo '      |   +-- insert   [-h] PATH INDEX';
+    echo '      |   +-- sock     [-ch]';
+    echo '      +-- freeport     [-h]';
+    echo '      +-- json-ins     [-hn] JSON INDEX';
+    echo '      +-- os-probe     [-h]';
+    echo '      +-- ps           [-h] [-t TYPE]';
+    echo '      +-- repo-config  [-hn] [PKG-MANAGER OS-NAME OS-VERSION]';
+    echo '      +-- welcome      [-hn]';
     echo;
     echo 'DESCRIPTION';
     echo '      This script simplifies installing and configuring';
@@ -174,6 +191,11 @@ unit_ctl()
     {
         echo 'SYNOPSIS';
         echo "      $program_name ctl [-h] SUBCOMMAND [ARGS]";
+        echo;
+        echo '   Subcommands';
+        echo '      +-- http    [-hn] METHOD PATH';
+        echo '      +-- insert  [-h] PATH INDEX';
+        echo '      +-- sock    [-ch]';
         echo;
         echo 'DESCRIPTION';
         echo '      Control a running unitd(8) instance through its control';

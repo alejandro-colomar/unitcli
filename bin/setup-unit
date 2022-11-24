@@ -251,16 +251,34 @@ unit_ctl_http()
         echo '      The payload is read from standard input.';
         echo;
         echo 'OPTIONS';
+        echo '      -c, --curl OPTION';
+        echo '              Pass OPTION as an option to curl.  This script is';
+        echo "              implemented in terms of curl(1), so it's useful to";
+        echo '              be able to tweak its behavior.';
+        echo;
         echo '      -h, --help';
         echo '              Print this help.';
         echo;
         echo '      -n, --dry-run';
         echo '              Dry run.  Print the command to be run instead'
         echo '              of actually running it.';
+        echo;
+        echo 'EXAMPLES';
+        echo "      $program_name ctl http -c --no-progress-meter GET /config >tmp;";
     }
+
+    local curl_options='';
 
     while test -v 1; do
         case "$1" in
+        -c | --curl)
+            if test ! -v 2; then
+                >&2 help_unit_ctl_http;
+                exit 1;
+            fi;
+            curl_options="$curl_options $2";
+            shift;
+            ;;
         -h | --help)
             help_unit_ctl_http;
             exit 0;
@@ -290,7 +308,7 @@ unit_ctl_http()
     unit_ctl_sock -c \
     | read -r curl_opt;
 
-    dry_run_eval "curl -X $method -d@- ${curl_opt}${req_path};";
+    dry_run_eval "curl $curl_options -X $method -d@- ${curl_opt}${req_path};";
 }
 
 

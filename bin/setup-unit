@@ -993,9 +993,16 @@ unit_repo_config()
         dry_run_eval 'curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg;';
         dry_run_echo;
         dry_run_eval 'apt install -y apt-transport-https lsb-release ca-certificates;';
+
+        if test -v 3; then
+            local os_version="$2";
+        else
+            local os_version='$(lsb_release -cs)';
+        fi;
+
         dry_run_echo;
-        dry_run_eval 'printf "deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n" "$(lsb_release -cs)" | tee /etc/apt/sources.list.d/unit.list;';
-        dry_run_eval 'printf "deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n" "$(lsb_release -cs)" | tee -a /etc/apt/sources.list.d/unit.list;';
+        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n' \"$os_version\" | tee /etc/apt/sources.list.d/unit.list;";
+        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n' \"$os_version\" | tee -a /etc/apt/sources.list.d/unit.list;";
         dry_run_echo;
         dry_run_eval 'apt update;';
     }
@@ -1007,9 +1014,16 @@ unit_repo_config()
         dry_run_eval 'curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg;';
         dry_run_echo;
         dry_run_eval 'apt install -y apt-transport-https lsb-release ca-certificates;';
+
+        if test -v 3; then
+            local os_version="$2";
+        else
+            local os_version='$(lsb_release -cs)';
+        fi;
+
         dry_run_echo;
-        dry_run_eval 'printf "deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n" "$(lsb_release -cs)" | tee /etc/apt/sources.list.d/unit.list;';
-        dry_run_eval 'printf "deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n" "$(lsb_release -cs)" | tee -a /etc/apt/sources.list.d/unit.list;';
+        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n' \"$os_version\" | tee /etc/apt/sources.list.d/unit.list;";
+        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n' \"$os_version\" | tee -a /etc/apt/sources.list.d/unit.list;";
         dry_run_echo;
         dry_run_eval 'apt update;';
     }
@@ -1137,25 +1151,25 @@ __EOF__';
     # Call the appropriate installation function
     case "$os_name" in
     debian)
-        installDebian "$os_name" "$os_version"
+        installDebian "$os_name" "$os_version" ${2:+ovr}
         ;;
     ubuntu)
-        installUbuntu "$os_name" "$os_version"
+        installUbuntu "$os_name" "$os_version" ${2:+ovr}
         ;;
     rhel)
-        installRedHat "$os_name" "$os_version"
+        installRedHat "$os_name" "$os_version" ${2:+ovr}
         ;;
     centos)
-        installRedHat "$os_name" "$os_version"
+        installRedHat "$os_name" "$os_version" ${2:+ovr}
         ;;
     ol)
-        installRedHat "$os_name" "$os_version"
+        installRedHat "$os_name" "$os_version" ${2:+ovr}
         ;;
     amzn)
-        installAmazon "$os_name" "$os_version"
+        installAmazon "$os_name" "$os_version" ${2:+ovr}
         ;;
     fedora)
-        installFedora "$os_name" "$os_version"
+        installFedora "$os_name" "$os_version" ${2:+ovr}
         ;;
     *)
         err "$os_name isn't supported"

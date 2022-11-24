@@ -986,9 +986,11 @@ unit_repo_config()
         echo '              preceded by a line explaining what it does.';
     }
 
-    installDebian ()
+    installAPT ()
     {
-        dry_run_echo 'Install on Debian';
+        local os_name="$1";
+
+        dry_run_echo "Install on $os_name";
         dry_run_echo;
         dry_run_eval 'curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg;';
         dry_run_echo;
@@ -1001,29 +1003,8 @@ unit_repo_config()
         fi;
 
         dry_run_echo;
-        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n' \"$os_version\" | tee /etc/apt/sources.list.d/unit.list;";
-        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/debian/ %s unit\n' \"$os_version\" | tee -a /etc/apt/sources.list.d/unit.list;";
-        dry_run_echo;
-        dry_run_eval 'apt update;';
-    }
-
-    installUbuntu ()
-    {
-        dry_run_echo 'Install on Ubuntu';
-        dry_run_echo;
-        dry_run_eval 'curl --output /usr/share/keyrings/nginx-keyring.gpg https://unit.nginx.org/keys/nginx-keyring.gpg;';
-        dry_run_echo;
-        dry_run_eval 'apt install -y apt-transport-https lsb-release ca-certificates;';
-
-        if test -v 3; then
-            local os_version="$2";
-        else
-            local os_version='$(lsb_release -cs)';
-        fi;
-
-        dry_run_echo;
-        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n' \"$os_version\" | tee /etc/apt/sources.list.d/unit.list;";
-        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/ubuntu/ %s unit\n' \"$os_version\" | tee -a /etc/apt/sources.list.d/unit.list;";
+        dry_run_eval "printf 'deb [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/$os_name/ %s unit\n' \"$os_version\" | tee /etc/apt/sources.list.d/unit.list;";
+        dry_run_eval "printf 'deb-src [signed-by=/usr/share/keyrings/nginx-keyring.gpg] https://packages.nginx.org/unit/$os_name/ %s unit\n' \"$os_version\" | tee -a /etc/apt/sources.list.d/unit.list;";
         dry_run_echo;
         dry_run_eval 'apt update;';
     }
@@ -1151,10 +1132,10 @@ __EOF__';
     # Call the appropriate installation function
     case "$os_name" in
     debian)
-        installDebian "$os_name" "$os_version" ${2:+ovr}
+        installAPT "$os_name" "$os_version" ${2:+ovr}
         ;;
     ubuntu)
-        installUbuntu "$os_name" "$os_version" ${2:+ovr}
+        installAPT "$os_name" "$os_version" ${2:+ovr}
         ;;
     rhel)
         installRedHat "$os_name" "$os_version" ${2:+ovr}

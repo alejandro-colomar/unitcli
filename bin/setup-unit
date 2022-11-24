@@ -1019,7 +1019,7 @@ unit_repo_config()
 
         case "$os_version" in
             7|7.*|8|8.*)
-                dry_run_eval 'cat << __EOF__ > /etc/yum.repos.d/unit.repo \
+                dry_run_eval 'cat >/etc/yum.repos.d/unit.repo <<__EOF__
 [unit]
 name=unit repo
 baseurl=https://packages.nginx.org/unit/rhel/\$releasever/\$basearch/

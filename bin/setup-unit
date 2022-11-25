@@ -1129,7 +1129,7 @@ __EOF__";
             installAPT "$pkg_mngr" "$os_name" ${3:+$os_version};
             ;;
         *)
-            err "$os_name isn't supported";
+            err "'$os_name': The OS isn't supported";
             ;;
         esac
         ;;
@@ -1139,12 +1139,12 @@ __EOF__";
             installYumDnf "$pkg_mngr" "$os_name" "$os_version" ${3:+ovr};
             ;;
         *)
-            err "$os_name isn't supported";
+            err "'$os_name': The OS isn't supported";
             ;;
         esac;
         ;;
     *)
-        err "$pkg_mngr isn't supported";
+        err "'$pkg_mngr': The package manager isn't supported";
         ;;
     esac;
 

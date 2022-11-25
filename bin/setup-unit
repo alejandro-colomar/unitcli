@@ -991,26 +991,23 @@ unit_repo_config()
         echo "      $program_name repo-config [-hn] [PKG-MANAGER OS-NAME OS-VERSION]";
         echo;
         echo 'DESCRIPTION';
-        echo '      This script configures the NGINX Unit repository on';
-        echo '      Amazon Linux, CentOS, Debian, Fedora, Oracle Linux, Red Hat, or Ubuntu.';
+        echo '      This script configures the NGINX Unit repository for the system';
+        echo '      package manager.';
         echo;
         echo '      The script automatically detects your OS, and works accordingly.';
-        echo '      However, in case the detection fails, you may specify the package';
-        echo '      manager and the OS name and version.  The supported package managers,';
-        echo '      OS names and versions are:';
+        echo '      However, in case the automatic selection fails, you may specify the';
+        echo '      package manager and the OS name and version.';
         echo;
-        echo '      apt';
-        echo '              debian  jessie, stretch, buster, bullseye';
-        echo '              ubuntu  artful, bionic, cosmic, disco, eoan, focal,';
-        echo '                      groovy, hirsute, impish, jammy, xenial, zesty';
-        echo '      yum | dnf';
-        echo '              fedora  28, 29, 30, 31, 32, 33, 34, 35, 36';
-        echo '              rhel    7, 8';
-        echo '              amzn2   2';
+        echo 'ARGUMENTS';
+        echo '      PKG-MANAGER';
+        echo "              Supported: 'apt', 'dnf', and 'yum'.";
         echo;
-        echo '      The list of supported OS names and versions may change.';
+        echo '      OS-NAME';
+        echo "              Supported: 'debian', 'ubuntu', 'fedora', 'rhel', and 'amzn2'.";
         echo;
-        echo "      For CentOS and Oracle Linux, you should specify 'rhel'.";
+        echo '      OS-VERSION';
+        echo '              For most distributions this should be a numeric value,';
+        echo '              but for debian derivatives, the codename should be used.';
         echo;
         echo 'OPTIONS';
         echo '      -h, --help';
@@ -1020,6 +1017,13 @@ unit_repo_config()
         echo '              Dry run.  Print the commands to be run instead'
         echo '              of actually running them.  Each command is';
         echo '              preceded by a line explaining what it does.';
+        echo;
+        echo 'EXAMPLES';
+        echo "      $ $(basename $program_name) repo-config apt debian bullseye;";
+        echo "      $ $(basename $program_name) repo-config apt ubuntu jammy;";
+        echo "      $ $(basename $program_name) repo-config dnf fedora 36;";
+        echo "      $ $(basename $program_name) repo-config dnf rhel 9;";
+        echo "      $ $(basename $program_name) repo-config yum amzn2 2;";
     }
 
     installAPT ()

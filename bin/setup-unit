@@ -279,23 +279,6 @@ unit_ctl()
         err 'ctl: -r: Missing -s option.';
     fi;
 
-    if test -v remote; then
-        local remote_sock="$(echo "$sock" | unit_sock_filter -s)";
-        local local_sock="$(mktemp -u -p /var/run/unit/)";
-        local ssh_ctrl="$(mktemp -u -p /var/run/unit/)";
-
-        mkdir -p /var/run/unit/;
-
-        ssh -fMNnT -S "$ssh_ctrl" \
-                   -o 'ExitOnForwardFailure yes' \
-                   -L "$local_sock:$remote_sock" "$remote";
-
-        sock="unix:$local_sock";
-
-    elif ! test -v sock; then
-        local sock="$(unit_sock_find)";
-    fi;
-
     if test ! $# -ge 1; then
         err 'ctl: Missing subcommand.';
     fi;
@@ -303,21 +286,16 @@ unit_ctl()
     case $1 in
     http)
         shift;
-        unit_ctl_http ---sock "$sock" $@;
+        unit_ctl_http ${remote:+ ---r $remote} ${sock:+ ---s $sock} $@;
         ;;
     insert)
         shift;
-        unit_ctl_insert ---sock "$sock" $@;
+        unit_ctl_insert ${remote:+ ---r $remote} ${sock:+ ---s $sock} $@;
         ;;
     *)
         err "ctl: $1: Unknown argument.";
         ;;
     esac;
-
-    if test -v ssh_ctrl; then
-        ssh -S "$ssh_ctrl" -O exit "$remote" 2>/dev/null;
-        unlink "$local_sock";
-    fi;
 }
 
 
@@ -367,7 +345,11 @@ unit_ctl_http()
             help_unit_ctl_http;
             exit 0;
             ;;
-        ---sock)
+        ---r | ----remote)
+            local remote="$2";
+            shift;
+            ;;
+        ---s | ----sock)
             local sock="$2";
             shift;
             ;;
@@ -391,8 +373,30 @@ unit_ctl_http()
     fi;
     local req_path="$2";
 
+    if test -v remote; then
+        local remote_sock="$(echo "$sock" | unit_sock_filter -s)";
+        local local_sock="$(mktemp -u -p /var/run/unit/)";
+        local ssh_ctrl="$(mktemp -u -p /var/run/unit/)";
+
+        mkdir -p /var/run/unit/;
+
+        ssh -fMNnT -S "$ssh_ctrl" \
+                   -o 'ExitOnForwardFailure yes' \
+                   -L "$local_sock:$remote_sock" "$remote";
+
+        sock="unix:$local_sock";
+
+    elif ! test -v sock; then
+        local sock="$(unit_sock_find)";
+    fi;
+
     curl $curl_options -X $method -d@- \
             $(echo "$sock" | unit_sock_filter -c)${req_path};
+
+    if test -v remote; then
+        ssh -S "$ssh_ctrl" -O exit "$remote" 2>/dev/null;
+        unlink "$local_sock";
+    fi;
 }
 
 
@@ -420,7 +424,11 @@ unit_ctl_insert()
             help_unit_ctl_insert;
             exit 0;
             ;;
-        ---sock)
+        ---r | ----remote)
+            local remote="$2";
+            shift;
+            ;;
+        ---s | ----sock)
             local sock="$2";
             shift;
             ;;
@@ -444,13 +452,35 @@ unit_ctl_insert()
     fi;
     local idx="$2";
 
+    if test -v remote; then
+        local remote_sock="$(echo "$sock" | unit_sock_filter -s)";
+        local local_sock="$(mktemp -u -p /var/run/unit/)";
+        local ssh_ctrl="$(mktemp -u -p /var/run/unit/)";
+
+        mkdir -p /var/run/unit/;
+
+        ssh -fMNnT -S "$ssh_ctrl" \
+                   -o 'ExitOnForwardFailure yes' \
+                   -L "$local_sock:$remote_sock" "$remote";
+
+        sock="unix:$local_sock";
+
+    elif ! test -v sock; then
+        local sock="$(unit_sock_find)";
+    fi;
+
     local old="$(mktemp)";
 
-    unit_ctl_http ---sock "$sock" -c --no-progress-meter GET "$req_path" \
+    unit_ctl_http ---s "$sock" -c --no-progress-meter GET "$req_path" \
             </dev/null >"$old";
 
     unit_json_ins "$old" "$idx" \
-    | unit_ctl_http ---sock "$sock" PUT "$req_path";
+    | unit_ctl_http ---s "$sock" PUT "$req_path";
+
+    if test -v remote; then
+        ssh -S "$ssh_ctrl" -O exit "$remote" 2>/dev/null;
+        unlink "$local_sock";
+    fi;
 }
 
 
@@ -553,7 +583,7 @@ unit_ctl_welcome()
         ||:;
 
         if test -e $conffile; then
-            if ! unit_ctl_http ---sock "$sock" 'GET' '/config' </dev/null 2>/dev/null | grep -q '^{}.\?$';  # The '.\?' is for the possible carriage return.
+            if ! unit_ctl_http ---s "$sock" 'GET' '/config' </dev/null 2>/dev/null | grep -q '^{}.\?$';  # The '.\?' is for the possible carriage return.
             then
                 warn 'welcome: NGINX Unit is already configured.  If you are sure you want';
                 err  'to overwrite its current configuration, run again with --force.';

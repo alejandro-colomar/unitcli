@@ -174,11 +174,10 @@ unit_cmd()
             exit 0;
             ;;
         -*)
-            >&2 help_unit_cmd;
-            exit 1;
+            err "cmd: $1: Unknown option.";
             ;;
         *)
-            break;
+            err "cmd: $1: Unknown argument.";
             ;;
         esac;
         shift;
@@ -236,23 +235,20 @@ unit_ctl()
             ;;
         -r | --remote)
             if ! test -v 2; then
-                >&2 help_unit_ctl;
-                exit 1;
+                err "ctl: $1: Missing argument.";
             fi;
             local remote="$2";
             shift;
             ;;
         -s | --sock)
             if ! test -v 2; then
-                >&2 help_unit_ctl;
-                exit 1;
+                err "ctl: $1: Missing argument.";
             fi;
             local sock="$2";
             shift;
             ;;
         -*)
-            >&2 help_unit_ctl;
-            exit 1;
+            err "ctl: $1: Unknown option.";
             ;;
         *)
             break;
@@ -263,8 +259,7 @@ unit_ctl()
 
     if test -v remote; then
         if ! test -v sock; then
-            >&2 help_unit_ctl;
-            exit 1;
+            err 'ctl: -r: Missing -s option.';
         fi;
 
         local remote_sock="$(echo "$sock" | unit_sock_filter -s)";
@@ -284,7 +279,7 @@ unit_ctl()
     fi;
 
     if test ! -v 1; then
-        >&2 help_unit_ctl;
+        err 'ctl: Missing subcommand.';
         exit 1;
     fi;
 
@@ -298,8 +293,7 @@ unit_ctl()
         unit_ctl_insert ---sock "$sock" $@;
         ;;
     *)
-        >&2 help_unit_ctl;
-        exit 1;
+        err "ctl: $1: Unknown argument.";
         ;;
     esac;
 
@@ -341,8 +335,7 @@ unit_ctl_http()
         case "$1" in
         -c | --curl)
             if test ! -v 2; then
-                >&2 help_unit_ctl_http;
-                exit 1;
+                err "ctl: http: $1: Missing argument.";
             fi;
             curl_options="$curl_options $2";
             shift;
@@ -356,8 +349,7 @@ unit_ctl_http()
             shift;
             ;;
         -*)
-            >&2 help_unit_ctl_http;
-            exit 1;
+            err "ctl: http: $1: Unknown option.";
             ;;
         *)
             break;
@@ -366,12 +358,14 @@ unit_ctl_http()
         shift;
     done;
 
-    if test ! -v 2; then
-        >&2 help_unit_ctl_http;
-        exit 1;
+    if test ! -v 1; then
+        err 'ctl: http: METHOD: Missing argument.';
     fi;
-
     local method="$1";
+
+    if test ! -v 2; then
+        err 'ctl: http: PATH: Missing argument.';
+    fi;
     local req_path="$2";
 
     curl $curl_options -X $method -d@- \
@@ -408,8 +402,7 @@ unit_ctl_insert()
             shift;
             ;;
         -*)
-            >&2 help_unit_ctl_insert;
-            exit 1;
+            err "ctl: insert: $1: Unknown option.";
             ;;
         *)
             break;
@@ -418,12 +411,14 @@ unit_ctl_insert()
         shift;
     done;
 
-    if test ! -v 2; then
-        >&2 help_unit_ctl_insert;
-        exit 1;
+    if test ! -v 1; then
+        err 'ctl: insert: PATH: Missing argument.';
     fi;
-
     local req_path="$1";
+
+    if test ! -v 2; then
+        err 'ctl: insert: INDEX: Missing argument.';
+    fi;
     local idx="$2";
 
     local old="$(mktemp)";
@@ -471,11 +466,10 @@ unit_ctl_welcome()
             dry_run='yes';
             ;;
         -*)
-            >&2 help_unit_ctl_welcome;
-            exit 1;
+            err "welcome: $1: Unknown option.";
             ;;
         *)
-            break;
+            err "welcome: $1: Unknown argument.";
             ;;
         esac;
         shift;
@@ -483,10 +477,10 @@ unit_ctl_welcome()
 
     id -u \
     | xargs test 0 -ne \
-    && err 'This script requires root privileges to run.';
+    && err 'welcome: This script requires root privileges to run.';
 
     command -v curl >/dev/null \
-    || err 'curl(1) not found in PATH.  It must be installed to run this script.';
+    || err 'welcome: curl(1) not found in PATH.  It must be installed to run this script.';
 
     www='/srv/www/unit/index.html';
     if test -e "$www" && ! test -v force || ! test -w /srv; then
@@ -501,18 +495,18 @@ unit_ctl_welcome()
     ||:
 
     if test 0 -eq "$nprocs"; then
-        warn "NGINX Unit isn't running.";
+        warn "welcome: NGINX Unit isn't running.";
         warn 'For help starting NGINX Unit, see:';
         err  "  <https://unit.nginx.org/installation/#startup-and-shutdown>";
     elif test 1 -ne "$nprocs"; then
-        err 'Only one NGINX Unit instance should be running.';
+        err 'welcome: Only one NGINX Unit instance should be running.';
     fi;
 
     local sock="$(unit_sock_find)";
     local curl_opt="$(unit_sock_find | unit_sock_filter -c)";
 
     curl $curl_opt/ >/dev/null 2>&1 \
-    || err "Can't reach the control socket.";
+    || err "welcome: Can't reach the control socket.";
 
     if ! test -v force; then
         unit_cmd \
@@ -538,7 +532,7 @@ unit_ctl_welcome()
         if test -e $conffile; then
             if ! unit_ctl_http ---sock "$sock" 'GET' '/config' </dev/null 2>/dev/null | grep -q '^{}.\?$';  # The '.\?' is for the possible carriage return.
             then
-                warn 'NGINX Unit is already configured.  If you are sure you want';
+                warn 'welcome: NGINX Unit is already configured.  If you are sure you want';
                 err  'to overwrite its current configuration, run again with --force.';
             fi;
         fi;
@@ -546,7 +540,7 @@ unit_ctl_welcome()
 
     (
         unit_freeport \
-        || err "Can't find an available port.";
+        || err "welcome: Can't find an available port.";
     ) \
     | read -r port;
 
@@ -662,11 +656,10 @@ unit_freeport()
             exit 0;
             ;;
         -*)
-            >&2 help_unit_freeport;
-            exit 1;
+            err "freeport: $1: Unknown option.";
             ;;
         *)
-            break;
+            err "freeport: $1: Unknown argument.";
             ;;
         esac;
         shift;
@@ -782,8 +775,7 @@ unit_json_ins()
             dry_run='yes';
             ;;
         -*)
-            >&2 help_unit_json_ins;
-            exit 1;
+            err "json-ins: $1: Unknown option.";
             ;;
         *)
             break;
@@ -792,12 +784,14 @@ unit_json_ins()
         shift;
     done;
 
-    if test ! -v 2; then
-        >&2 help_unit_json_ins;
-        exit 1;
+    if test ! -v 1; then
+        err 'json-ins: JSON: Missing argument.';
     fi;
-
     local arr=$1;
+
+    if test ! -v 2; then
+        err 'json-ins: INDEX: Missing argument.';
+    fi;
     local idx=$2;
 
     dry_run_eval "(
@@ -837,11 +831,10 @@ unit_os_probe()
             exit 0;
             ;;
         -*)
-            >&2 help_unit_os_probe;
-            exit 1;
+            err "os-probe: $1: Unknown option.";
             ;;
         *)
-            break;
+            err "os-probe: $1: Unknown argument.";
             ;;
         esac;
         shift;
@@ -850,7 +843,7 @@ unit_os_probe()
     local os=$(uname | tr '[:upper:]' '[:lower:]')
 
     if [ "$os" != 'linux' ] && [ "$os" != 'freebsd' ]; then
-        err "The OS isn't Linux or FreeBSD, can't proceed."
+        err "os-probe: The OS isn't Linux or FreeBSD, can't proceed."
     fi
 
     if [ "$os" = 'linux' ]; then
@@ -871,14 +864,14 @@ unit_os_probe()
             local osName=$(grep "^ID=" "$osRelease" | sed s/\"//g | awk -F= '{ print $2 }' ||:)
             local osVersion=$(grep '^VERSION_ID=' "$osRelease" | sed s/\"//g | awk -F= '{ print $2 }' || lsb_release -cs)
         else
-            err "Unable to determine OS and version, or the OS isn't supported"
+            err "os-probe: Unable to determine OS and version, or the OS isn't supported"
         fi
     else
         local pkgMngr='pkg';
         local osName=$os
         local osVersion=$(uname -rs | awk -F '[ -]' '{print $2}' ||:)
         if [ -z "$osVersion" ]; then
-            err 'Unable to get the FreeBSD version'
+            err 'os-probe: Unable to get the FreeBSD version'
         fi
     fi
 
@@ -918,8 +911,7 @@ unit_ps()
             ;;
         -t | --type)
             if test ! -v 2; then
-                >&2 help_unit_ps;
-                exit 1;
+                err "ps: $1: Missing argument.";
             fi;
             local type=;
             case "$2" in
@@ -936,11 +928,10 @@ unit_ps()
             shift;
             ;;
         -*)
-            >&2 help_unit_ps;
-            exit 1;
+            err "ps: $1: Unknown option.";
             ;;
         *)
-            break;
+            err "ps: $1: Unknown argument.";
             ;;
         esac;
         shift;
@@ -1061,8 +1052,7 @@ __EOF__";
             dry_run='yes';
             ;;
         -*)
-            >&2 help_unit_repo_config;
-            exit 1;
+            err "repo-config: $1: Unknown option.";
             ;;
         *)
             break;
@@ -1071,22 +1061,26 @@ __EOF__";
         shift;
     done;
 
-    if test -v 1 && ! test -v 3; then
-        >&2 help_unit_repo_config;
-        exit 1;
-    fi;
-    if test -v 3; then
+    if test -v 1; then
         local pkg_mngr="$1";
+
+        if ! test -v 2; then
+            err "repo-config: OS-NAME: Missing argument.";
+        fi;
         local os_name="$2";
+
+        if ! test -v 3; then
+            err "repo-config: OS-VERSION: Missing argument.";
+        fi;
         local os_version="$3";
     fi;
 
     command -v curl >/dev/null \
-    || err 'curl(1) not found in PATH.  It must be installed to run this script.';
+    || err 'repo-config: curl(1) not found in PATH.  It must be installed to run this script.';
 
     id -u \
     | xargs test 0 -ne \
-    && err 'This script requires root privileges to run.';
+    && err 'repo-config: This script requires root privileges to run.';
 
     echo 'This script sets up the NGINX Unit repository';
 
@@ -1105,7 +1099,7 @@ __EOF__";
             installAPT "$pkg_mngr" "$os_name" ${3:+$os_version};
             ;;
         *)
-            err "'$os_name': The OS isn't supported";
+            err "repo-config: $os_name: The OS isn't supported";
             ;;
         esac
         ;;
@@ -1115,12 +1109,12 @@ __EOF__";
             installYumDnf "$pkg_mngr" "$os_name" "$os_version" ${3:+ovr};
             ;;
         *)
-            err "'$os_name': The OS isn't supported";
+            err "repo-config: $os_name: The OS isn't supported";
             ;;
         esac;
         ;;
     *)
-        err "'$pkg_mngr': The package manager isn't supported";
+        err "repo-config: $pkg_mngr: The package manager isn't supported";
         ;;
     esac;
 
@@ -1169,8 +1163,7 @@ unit_sock()
             exit 0;
             ;;
         -*)
-            >&2 help_unit_sock;
-            exit 1;
+            err "sock: $1: Unknown option.";
             ;;
         *)
             break;
@@ -1180,8 +1173,7 @@ unit_sock()
     done;
 
     if test ! -v 1; then
-        >&2 help_unit_sock;
-        exit 1;
+        err 'sock: Missing subcommand.';
     fi;
 
     case $1 in
@@ -1194,8 +1186,7 @@ unit_sock()
         unit_sock_find $@;
         ;;
     *)
-        >&2 help_unit_sock;
-        exit 1;
+        err "sock: $1: Unknown subcommand.";
         ;;
     esac;
 }
@@ -1227,8 +1218,7 @@ unit_sock_filter()
         case "$1" in
         -c | --curl)
             if test -v ssh_flag; then
-                >&2 help_unit_sock_filter;
-                exit 1;
+                err "sock: filter: $1: Missing argument.";
             fi;
             local curl_flag='yes';
             ;;
@@ -1238,17 +1228,15 @@ unit_sock_filter()
             ;;
         -s | --ssh)
             if test -v curl_flag; then
-                >&2 help_unit_sock_filter;
-                exit 1;
+                err "sock: filter: $1: Missing argument.";
             fi;
             local ssh_flag='yes';
             ;;
         -*)
-            >&2 help_unit_sock_filter;
-            exit 1;
+            err "sock: filter: $1: Unknown option.";
             ;;
         *)
-            break;
+            err "sock: filter: $1: Unknown argument.";
             ;;
         esac;
         shift;
@@ -1301,11 +1289,10 @@ unit_sock_find()
             exit 0;
             ;;
         -*)
-            >&2 help_unit_sock_find;
-            exit 1;
+            err "sock: find: $1: Unknown option.";
             ;;
         *)
-            break;
+            err "sock: find: $1: Unknown argument.";
             ;;
         esac;
         shift;
@@ -1339,8 +1326,7 @@ while test -v 1; do
         exit 0;
         ;;
     -*)
-        >&2 help_unit;
-        exit 1;
+        err "$1: Unknown option.";
         ;;
     *)
         break;
@@ -1350,8 +1336,7 @@ while test -v 1; do
 done;
 
 if test ! -v 1; then
-    >&2 help_unit;
-    exit 1;
+    err "$1: Missing command.";
 fi;
 
 case $1 in
@@ -1392,7 +1377,6 @@ welcome)
     unit_ctl_welcome $@;
     ;;
 *)
-    >&2 help_unit;
-    exit 1;
+    err "$1: Unknown command.";
     ;;
 esac;

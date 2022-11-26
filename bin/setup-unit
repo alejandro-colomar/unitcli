@@ -79,7 +79,7 @@ help_more_unit()
     echo '      +-- ps           [-h] [-t TYPE]';
     echo '      +-- repo-config  [-hn] [PKG-MANAGER OS-NAME OS-VERSION]';
     echo '      +-- sock         [-h] SUBCOMMAND [ARGS]';
-    echo '      |   +-- filter   [-ch]';
+    echo '      |   +-- filter   [-chs]';
     echo '      |   +-- find     [-h]';
     echo '      +-- welcome      [-hn]';
     echo;
@@ -1155,7 +1155,7 @@ unit_sock_filter()
     help_unit_sock_filter()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name sock filter [-ch]";
+        echo "      $program_name sock filter [-chs]";
         echo;
         echo 'DESCRIPTION';
         echo '      Filter the output of the 'sock find' command, and transform it to';
@@ -1167,16 +1167,30 @@ unit_sock_filter()
         echo;
         echo '      -h, --help';
         echo '              Print this help.';
+        echo;
+        echo '      -s, --ssh';
+        echo '              Print a socket address suitable for use in an ssh(1) tunnel.';
     }
 
     while test -v 1; do
         case "$1" in
         -c | --curl)
+            if test -v ssh_flag; then
+                >&2 help_unit_sock_filter;
+                exit 1;
+            fi;
             local curl_flag='yes';
             ;;
         -h | --help)
             help_unit_sock_filter;
             exit 0;
+            ;;
+        -s | --ssh)
+            if test -v curl_flag; then
+                >&2 help_unit_sock_filter;
+                exit 1;
+            fi;
+            local ssh_flag='yes';
             ;;
         -*)
             >&2 help_unit_sock_filter;
@@ -1201,6 +1215,10 @@ unit_sock_filter()
             fi;
 
             echo "$unix_socket http://$host";
+
+        elif test -v ssh_flag; then
+            echo "$control" \
+            | sed 's%^unix:%%';
 
         else
             echo "$control";

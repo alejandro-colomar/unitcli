@@ -167,7 +167,7 @@ unit_cmd()
         echo '              Print this help.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_cmd;
@@ -227,21 +227,21 @@ unit_ctl()
         echo "              the 'destination'.  This option requires specifying -s.";
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_ctl;
             exit 0;
             ;;
         -r | --remote)
-            if ! test -v 2; then
+            if ! test $# -ge 2; then
                 err "ctl: $1: Missing argument.";
             fi;
             local remote="$2";
             shift;
             ;;
         -s | --sock)
-            if ! test -v 2; then
+            if ! test $# -ge 2; then
                 err "ctl: $1: Missing argument.";
             fi;
             local sock="$2";
@@ -278,7 +278,7 @@ unit_ctl()
         local sock="$(unit_sock_find)";
     fi;
 
-    if test ! -v 1; then
+    if test ! $# -ge 1; then
         err 'ctl: Missing subcommand.';
         exit 1;
     fi;
@@ -331,10 +331,10 @@ unit_ctl_http()
 
     local curl_options='';
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -c | --curl)
-            if test ! -v 2; then
+            if test ! $# -ge 2; then
                 err "ctl: http: $1: Missing argument.";
             fi;
             curl_options="$curl_options $2";
@@ -358,12 +358,12 @@ unit_ctl_http()
         shift;
     done;
 
-    if test ! -v 1; then
+    if test ! $# -ge 1; then
         err 'ctl: http: METHOD: Missing argument.';
     fi;
     local method="$1";
 
-    if test ! -v 2; then
+    if test ! $# -ge 2; then
         err 'ctl: http: PATH: Missing argument.';
     fi;
     local req_path="$2";
@@ -391,7 +391,7 @@ unit_ctl_insert()
         echo '              Print this help.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_ctl_insert;
@@ -411,12 +411,12 @@ unit_ctl_insert()
         shift;
     done;
 
-    if test ! -v 1; then
+    if test ! $# -ge 1; then
         err 'ctl: insert: PATH: Missing argument.';
     fi;
     local req_path="$1";
 
-    if test ! -v 2; then
+    if test ! $# -ge 2; then
         err 'ctl: insert: INDEX: Missing argument.';
     fi;
     local idx="$2";
@@ -453,7 +453,7 @@ unit_ctl_welcome()
         echo '              preceded by a line explaining what it does.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -f | --force)
             local force='yes';
@@ -649,7 +649,7 @@ unit_freeport()
         echo '              Print this help.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_freeport;
@@ -765,7 +765,7 @@ unit_json_ins()
         echo '              of actually running it.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_json_ins;
@@ -784,12 +784,12 @@ unit_json_ins()
         shift;
     done;
 
-    if test ! -v 1; then
+    if test ! $# -ge 1; then
         err 'json-ins: JSON: Missing argument.';
     fi;
     local arr=$1;
 
-    if test ! -v 2; then
+    if test ! $# -ge 2; then
         err 'json-ins: INDEX: Missing argument.';
     fi;
     local idx=$2;
@@ -824,7 +824,7 @@ unit_os_probe()
         echo '              Print this help.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_os_probe;
@@ -903,14 +903,14 @@ unit_ps()
         echo '              -  router (r)';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_ps;
             exit 0;
             ;;
         -t | --type)
-            if test ! -v 2; then
+            if test ! $# -ge 2; then
                 err "ps: $1: Missing argument.";
             fi;
             local type=;
@@ -1003,7 +1003,7 @@ unit_repo_config()
         dry_run_echo;
         dry_run_eval 'apt-get install -y apt-transport-https lsb-release ca-certificates;';
 
-        if test -v 3; then
+        if test $# -ge 3; then
             local os_version="$3";
         else
             local os_version='$(lsb_release -cs)';
@@ -1021,7 +1021,7 @@ unit_repo_config()
         local pkg_mngr="$1";
         local os_name="$2";
 
-        if test -v 3; then
+        if test $# -ge 3; then
             local os_version="$3";
         else
             local os_version='\$releasever';
@@ -1042,7 +1042,7 @@ __EOF__";
         dry_run_eval "$pkg_mngr makecache;";
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_repo_config;
@@ -1061,15 +1061,15 @@ __EOF__";
         shift;
     done;
 
-    if test -v 1; then
+    if test $# -ge 1; then
         local pkg_mngr="$1";
 
-        if ! test -v 2; then
+        if ! test $# -ge 2; then
             err "repo-config: OS-NAME: Missing argument.";
         fi;
         local os_name="$2";
 
-        if ! test -v 3; then
+        if ! test $# -ge 3; then
             err "repo-config: OS-VERSION: Missing argument.";
         fi;
         local os_version="$3";
@@ -1084,7 +1084,7 @@ __EOF__";
 
     echo 'This script sets up the NGINX Unit repository';
 
-    if test ! -v 3; then
+    if test ! $# -ge 3; then
         local os_pkg_name_version=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
         local pkg_mngr=$(echo "$os_pkg_name_version" | awk -F: '{print $1}')
         local os_name=$(echo "$os_pkg_name_version" | awk -F: '{print $2}')
@@ -1156,7 +1156,7 @@ unit_sock()
         echo '              Print this help.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_sock;
@@ -1172,7 +1172,7 @@ unit_sock()
         shift;
     done;
 
-    if test ! -v 1; then
+    if test ! $# -ge 1; then
         err 'sock: Missing subcommand.';
     fi;
 
@@ -1214,7 +1214,7 @@ unit_sock_filter()
         echo '              Print a socket address suitable for use in an ssh(1) tunnel.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -c | --curl)
             if test -v ssh_flag; then
@@ -1282,7 +1282,7 @@ unit_sock_find()
         echo '              Print this help.';
     }
 
-    while test -v 1; do
+    while test $# -ge 1; do
         case "$1" in
         -h | --help)
             help_unit_sock_find;
@@ -1315,7 +1315,7 @@ unit_sock_find()
 }
 
 
-while test -v 1; do
+while test $# -ge 1; do
     case "$1" in
     -h | --help)
         help_unit;
@@ -1335,7 +1335,7 @@ while test -v 1; do
     shift;
 done;
 
-if test ! -v 1; then
+if test ! $# -ge 1; then
     err "$1: Missing command.";
 fi;
 

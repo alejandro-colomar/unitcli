@@ -298,7 +298,6 @@ unit_ctl()
 
     if test ! $# -ge 1; then
         err 'ctl: Missing subcommand.';
-        exit 1;
     fi;
 
     case $1 in

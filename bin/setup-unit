@@ -71,7 +71,7 @@ help_more_unit()
     echo '   Subcommands';
     echo '      +-- cmd          [-h]';
     echo '      +-- ctl          [-h] SUBCOMMAND [ARGS]';
-    echo '      |   +-- http     [-hn] [-c CURLOPT] METHOD PATH';
+    echo '      |   +-- http     [-h] [-c CURLOPT] METHOD PATH';
     echo '      |   +-- insert   [-h] PATH INDEX';
     echo '      +-- freeport     [-h]';
     echo '      +-- json-ins     [-hn] JSON INDEX';
@@ -197,7 +197,7 @@ unit_ctl()
         echo "      $program_name ctl [-h] SUBCOMMAND [ARGS]";
         echo;
         echo '   Subcommands';
-        echo '      +-- http    [-hn] [-c CURLOPT] METHOD PATH';
+        echo '      +-- http    [-h] [-c CURLOPT] METHOD PATH';
         echo '      +-- insert  [-h] PATH INDEX';
         echo;
         echo 'DESCRIPTION';
@@ -262,7 +262,7 @@ unit_ctl_http()
     help_unit_ctl_http()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name ctl http [-hn] [-c CURLOPT] METHOD PATH";
+        echo "      $program_name ctl http [-h] [-c CURLOPT] METHOD PATH";
         echo;
         echo 'DESCRIPTION';
         echo '      Send an HTTP request to the unitd(8) control socket.';
@@ -277,10 +277,6 @@ unit_ctl_http()
         echo;
         echo '      -h, --help';
         echo '              Print this help.';
-        echo;
-        echo '      -n, --dry-run';
-        echo '              Dry run.  Print the command to be run instead'
-        echo '              of actually running it.';
         echo;
         echo 'EXAMPLES';
         echo "      $program_name ctl http -c --no-progress-meter GET /config >tmp;";
@@ -301,9 +297,6 @@ unit_ctl_http()
         -h | --help)
             help_unit_ctl_http;
             exit 0;
-            ;;
-        -n | --dry-run)
-            dry_run='yes';
             ;;
         -*)
             >&2 help_unit_ctl_http;
@@ -328,7 +321,7 @@ unit_ctl_http()
     | unit_sock_filter -c \
     | read -r curl_opt;
 
-    dry_run_eval "curl $curl_options -X $method -d@- ${curl_opt}${req_path};";
+    curl $curl_options -X $method -d@- ${curl_opt}${req_path};
 }
 
 

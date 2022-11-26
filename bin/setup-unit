@@ -391,7 +391,8 @@ unit_ctl_http()
     fi;
 
     curl $curl_options -X $method -d@- \
-            $(echo "$sock" | unit_sock_filter -c)${req_path};
+            $(echo "$sock" | unit_sock_filter -c)${req_path} \
+    ||:;
 
     if test -v remote; then
         ssh -S "$ssh_ctrl" -O exit "$remote" 2>/dev/null;
@@ -469,13 +470,15 @@ unit_ctl_insert()
         local sock="$(unit_sock_find)";
     fi;
 
-    local old="$(mktemp)";
+    local old="$(mktemp ||:)";
 
     unit_ctl_http ---s "$sock" -c --no-progress-meter GET "$req_path" \
-            </dev/null >"$old";
+            </dev/null >"$old" \
+    ||:;
 
     unit_json_ins "$old" "$idx" \
-    | unit_ctl_http ---s "$sock" PUT "$req_path";
+    | unit_ctl_http ---s "$sock" PUT "$req_path" \
+    ||:;
 
     if test -v remote; then
         ssh -S "$ssh_ctrl" -O exit "$remote" 2>/dev/null;

@@ -78,7 +78,9 @@ help_more_unit()
     echo '      +-- os-probe     [-h]';
     echo '      +-- ps           [-h] [-t TYPE]';
     echo '      +-- repo-config  [-hn] [PKG-MANAGER OS-NAME OS-VERSION]';
-    echo '      +-- sock         [-ch]';
+    echo '      +-- sock         [-h] SUBCOMMAND [ARGS]';
+    echo '      |   +-- filter   [-ch]';
+    echo '      |   +-- find     [-h]';
     echo '      +-- welcome      [-hn]';
     echo;
     echo 'DESCRIPTION';
@@ -322,7 +324,8 @@ unit_ctl_http()
     local method="$1";
     local req_path="$2";
 
-    unit_sock -c \
+    unit_sock_find \
+    | unit_sock_filter -c \
     | read -r curl_opt;
 
     dry_run_eval "curl $curl_options -X $method -d@- ${curl_opt}${req_path};";
@@ -453,7 +456,8 @@ unit_ctl_welcome()
         err 'Only one NGINX Unit instance should be running.';
     fi;
 
-    unit_sock -c \
+    unit_sock_find \
+    | unit_sock_filter -c \
     | read -r curl_opt;
 
     curl $curl_opt/ >/dev/null 2>&1 \
@@ -529,8 +533,8 @@ unit_ctl_welcome()
                 <h3>Check Current Configuration</h3>
                 <div class="indent">
                 <p>Unit'"'"'s control API is currently listening for configuration changes
-                   on the '"$(unit_sock | grep -q '^unix:' && echo '<a href="https://en.wikipedia.org/wiki/Unix_domain_socket">Unix socket</a>' || echo 'socket')"' at
-                   <b>'"$(unit_sock)"'</b><br>
+                   on the '"$(unit_sock_find | grep -q '^unix:' && echo '<a href="https://en.wikipedia.org/wiki/Unix_domain_socket">Unix socket</a>' || echo 'socket')"' at
+                   <b>'"$(unit_sock_find)"'</b><br>
                    To see the current configuration:</p>
                 <pre>'"${SUDO_USER:+sudo }"'curl '"$curl_opt"'/config</pre>
                 </div>
@@ -1081,25 +1085,34 @@ unit_sock()
     help_unit_sock()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name sock [-ch]";
+        echo "      $program_name sock [-h] SUBCOMMAND [ARGS]";
+        echo;
+        echo '   Subcommands';
+        echo '      +-- filter  [-ch]';
+        echo '      +-- find    [-h]';
         echo;
         echo 'DESCRIPTION';
         echo '      Print the address of the control API socket of';
         echo '      running instances of unitd(8).';
         echo;
-        echo 'OPTIONS';
-        echo '      -c, --curl';
-        echo '              Print an argument suitable for curl(1).';
+        echo "      Run '$program_name sock SUBCOMMAND -h' for more information";
+        echo '      on a subcommand.';
         echo;
+        echo 'SUBCOMMANDS';
+        echo "      filter  Filter the output of the 'find' subcommand, and transform";
+        echo '              it to something suitable to run other commands, such as';
+        echo '              curl(1) or ssh(1).';
+        echo;
+        echo '      find    Find and print the address of the control API socket of';
+        echo '              running instances of unitd(8).';
+        echo;
+        echo 'OPTIONS';
         echo '      -h, --help';
         echo '              Print this help.';
     }
 
     while test -v 1; do
         case "$1" in
-        -c | --curl)
-            local curl_flag='yes';
-            ;;
         -h | --help)
             help_unit_sock;
             exit 0;
@@ -1115,11 +1128,123 @@ unit_sock()
         shift;
     done;
 
+    if test ! -v 1; then
+        >&2 help_unit_sock;
+        exit 1;
+    fi;
+
+    case $1 in
+    filter)
+        shift;
+        unit_sock_filter $@;
+        ;;
+    find)
+        shift;
+        unit_sock_find $@;
+        ;;
+    *)
+        >&2 help_unit_sock;
+        exit 1;
+        ;;
+    esac;
+}
+
+
+unit_sock_filter()
+{
+    help_unit_sock_filter()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name sock filter [-ch]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Filter the output of the 'sock find' command, and transform it to';
+        echo '      something suitable to run other commands, such as curl(1) or ssh(1).';
+        echo;
+        echo 'OPTIONS';
+        echo '      -c, --curl';
+        echo '              Print an argument suitable for curl(1).';
+        echo;
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -c | --curl)
+            local curl_flag='yes';
+            ;;
+        -h | --help)
+            help_unit_sock_filter;
+            exit 0;
+            ;;
+        -*)
+            >&2 help_unit_sock_filter;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
+    while read -r control; do
+
+        if test -v curl_flag; then
+            if echo "$control" | grep '^unix:' >/dev/null; then
+                unix_socket="$(echo "$control" | sed 's/unix:/--unix-socket /')";
+                host='localhost';
+            else
+                unix_socket='';
+                host="$control";
+            fi;
+
+            echo "$unix_socket http://$host";
+
+        else
+            echo "$control";
+        fi;
+    done;
+}
+
+
+unit_sock_find()
+{
+    help_unit_sock_find()
+    {
+        echo 'SYNOPSIS';
+        echo "      $program_name sock find [-h]";
+        echo;
+        echo 'DESCRIPTION';
+        echo '      Find and print the address of the control API socket of';
+        echo '      running instances of unitd(8).';
+        echo;
+        echo 'OPTIONS';
+        echo '      -h, --help';
+        echo '              Print this help.';
+    }
+
+    while test -v 1; do
+        case "$1" in
+        -h | --help)
+            help_unit_sock_find;
+            exit 0;
+            ;;
+        -*)
+            >&2 help_unit_sock_find;
+            exit 1;
+            ;;
+        *)
+            break;
+            ;;
+        esac;
+        shift;
+    done;
+
     unit_cmd \
     | while read -r cmd; do
-
-        echo "$cmd" \
-        | if grep '\--control' >/dev/null; then
+        if echo "$cmd" | grep '\--control' >/dev/null; then
             echo "$cmd" \
             | sed 's/ --/\n--/g' \
             | grep '\--control' \
@@ -1129,23 +1254,7 @@ unit_sock()
             | sed -n '/\--control/,+1p' \
             | grep 'default:' \
             | sed 's/ *default: "\(.*\)"/\1/';
-        fi \
-        | read -r control;
-
-        if ! test -v curl_flag; then
-            echo "$control";
-            return 0;
         fi;
-
-        if echo "$control" | grep '^unix:' >/dev/null; then
-            unix_socket="$(echo "$control" | sed 's/unix:/--unix-socket /')";
-            host='localhost';
-        else
-            unix_socket='';
-            host="$control";
-        fi;
-
-        echo "$unix_socket http://$host";
     done;
 }
 

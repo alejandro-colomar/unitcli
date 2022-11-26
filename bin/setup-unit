@@ -334,7 +334,7 @@ unit_ctl_http()
     while test $# -ge 1; do
         case "$1" in
         -c | --curl)
-            if test ! $# -ge 2; then
+            if ! test $# -ge 2; then
                 err "ctl: http: $1: Missing argument.";
             fi;
             curl_options="$curl_options $2";
@@ -358,12 +358,12 @@ unit_ctl_http()
         shift;
     done;
 
-    if test ! $# -ge 1; then
+    if ! test $# -ge 1; then
         err 'ctl: http: METHOD: Missing argument.';
     fi;
     local method="$1";
 
-    if test ! $# -ge 2; then
+    if ! test $# -ge 2; then
         err 'ctl: http: PATH: Missing argument.';
     fi;
     local req_path="$2";
@@ -411,12 +411,12 @@ unit_ctl_insert()
         shift;
     done;
 
-    if test ! $# -ge 1; then
+    if ! test $# -ge 1; then
         err 'ctl: insert: PATH: Missing argument.';
     fi;
     local req_path="$1";
 
-    if test ! $# -ge 2; then
+    if ! test $# -ge 2; then
         err 'ctl: insert: INDEX: Missing argument.';
     fi;
     local idx="$2";
@@ -784,12 +784,12 @@ unit_json_ins()
         shift;
     done;
 
-    if test ! $# -ge 1; then
+    if ! test $# -ge 1; then
         err 'json-ins: JSON: Missing argument.';
     fi;
     local arr=$1;
 
-    if test ! $# -ge 2; then
+    if ! test $# -ge 2; then
         err 'json-ins: INDEX: Missing argument.';
     fi;
     local idx=$2;
@@ -910,7 +910,7 @@ unit_ps()
             exit 0;
             ;;
         -t | --type)
-            if test ! $# -ge 2; then
+            if ! test $# -ge 2; then
                 err "ps: $1: Missing argument.";
             fi;
             local type=;
@@ -1084,7 +1084,7 @@ __EOF__";
 
     echo 'This script sets up the NGINX Unit repository';
 
-    if test ! $# -ge 3; then
+    if ! test $# -ge 3; then
         local os_pkg_name_version=$(unit_os_probe || warn "On macOS, try 'brew install nginx/unit/unit'.")
         local pkg_mngr=$(echo "$os_pkg_name_version" | awk -F: '{print $1}')
         local os_name=$(echo "$os_pkg_name_version" | awk -F: '{print $2}')
@@ -1172,7 +1172,7 @@ unit_sock()
         shift;
     done;
 
-    if test ! $# -ge 1; then
+    if ! test $# -ge 1; then
         err 'sock: Missing subcommand.';
     fi;
 
@@ -1335,7 +1335,7 @@ while test $# -ge 1; do
     shift;
 done;
 
-if test ! $# -ge 1; then
+if ! test $# -ge 1; then
     err "$1: Missing command.";
 fi;
 

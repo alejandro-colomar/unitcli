@@ -26,6 +26,7 @@ test -v BASH_VERSION \
 export LC_ALL=C
 
 program_name="$0";
+prog_name="$(basename $program_name)";
 
 dry_run='no';
 
@@ -126,12 +127,12 @@ help_more_unit()
 
 warn()
 {
-    >&2 echo "$(basename $program_name): error: $*";
+    >&2 echo "$prog_name: error: $*";
 }
 
 err()
 {
-    >&2 echo "$(basename $program_name): error: $*";
+    >&2 echo "$prog_name: error: $*";
     exit 1;
 }
 
@@ -986,11 +987,11 @@ unit_repo_config()
         echo '              preceded by a line explaining what it does.';
         echo;
         echo 'EXAMPLES';
-        echo "      $ $(basename $program_name) repo-config apt debian bullseye;";
-        echo "      $ $(basename $program_name) repo-config apt ubuntu jammy;";
-        echo "      $ $(basename $program_name) repo-config dnf fedora 36;";
-        echo "      $ $(basename $program_name) repo-config dnf rhel 9;";
-        echo "      $ $(basename $program_name) repo-config yum amzn2 2;";
+        echo "      $ $prog_name repo-config apt debian bullseye;";
+        echo "      $ $prog_name repo-config apt ubuntu jammy;";
+        echo "      $ $prog_name repo-config dnf fedora 36;";
+        echo "      $ $prog_name repo-config dnf rhel 9;";
+        echo "      $ $prog_name repo-config yum amzn2 2;";
     }
 
     installAPT ()

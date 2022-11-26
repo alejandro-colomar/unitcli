@@ -235,6 +235,8 @@ unit_ctl()
         shift;
     done;
 
+    local sock="$(unit_sock_find)";
+
     if test ! -v 1; then
         >&2 help_unit_ctl;
         exit 1;
@@ -243,11 +245,11 @@ unit_ctl()
     case $1 in
     http)
         shift;
-        unit_ctl_http $@;
+        unit_ctl_http ---sock "$sock" $@;
         ;;
     insert)
         shift;
-        unit_ctl_insert $@;
+        unit_ctl_insert ---sock "$sock" $@;
         ;;
     *)
         >&2 help_unit_ctl;
@@ -298,6 +300,10 @@ unit_ctl_http()
             help_unit_ctl_http;
             exit 0;
             ;;
+        ---sock)
+            local sock="$2";
+            shift;
+            ;;
         -*)
             >&2 help_unit_ctl_http;
             exit 1;
@@ -317,11 +323,8 @@ unit_ctl_http()
     local method="$1";
     local req_path="$2";
 
-    unit_sock_find \
-    | unit_sock_filter -c \
-    | read -r curl_opt;
-
-    curl $curl_options -X $method -d@- ${curl_opt}${req_path};
+    curl $curl_options -X $method -d@- \
+            $(echo "$sock" | unit_sock_filter -c)${req_path};
 }
 
 
@@ -349,6 +352,10 @@ unit_ctl_insert()
             help_unit_ctl_insert;
             exit 0;
             ;;
+        ---sock)
+            local sock="$2";
+            shift;
+            ;;
         -*)
             >&2 help_unit_ctl_insert;
             exit 1;
@@ -370,10 +377,11 @@ unit_ctl_insert()
 
     local old="$(mktemp)";
 
-    unit_ctl_http -c --no-progress-meter GET "$req_path" </dev/null >"$old";
+    unit_ctl_http ---sock "$sock" -c --no-progress-meter GET "$req_path" \
+            </dev/null >"$old";
 
     unit_json_ins "$old" "$idx" \
-    | unit_ctl_http PUT "$req_path";
+    | unit_ctl_http ---sock "$sock" PUT "$req_path";
 }
 
 
@@ -449,9 +457,8 @@ unit_ctl_welcome()
         err 'Only one NGINX Unit instance should be running.';
     fi;
 
-    unit_sock_find \
-    | unit_sock_filter -c \
-    | read -r curl_opt;
+    local sock="$(unit_sock_find)";
+    local curl_opt="$(unit_sock_find | unit_sock_filter -c)";
 
     curl $curl_opt/ >/dev/null 2>&1 \
     || err "Can't reach the control socket.";
@@ -478,7 +485,7 @@ unit_ctl_welcome()
         ||:;
 
         if test -e $conffile; then
-            if ! unit_ctl_http 'GET' '/config' </dev/null 2>/dev/null | grep -q '^{}.\?$';  # The '.\?' is for the possible carriage return.
+            if ! unit_ctl_http ---sock "$sock" 'GET' '/config' </dev/null 2>/dev/null | grep -q '^{}.\?$';  # The '.\?' is for the possible carriage return.
             then
                 warn 'NGINX Unit is already configured.  If you are sure you want';
                 err  'to overwrite its current configuration, run again with --force.';

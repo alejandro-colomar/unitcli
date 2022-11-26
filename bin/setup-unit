@@ -226,7 +226,24 @@ unit_ctl()
         echo '              Use REMOTE to reach the API control socket through an';
         echo '              ssh(1) tunnel.  The syntax is as specified by ssh(1) as';
         echo "              the 'destination'.  This option requires specifying -s.";
+        echo;
+        echo 'ENVIRONMENT';
+        echo '      Options take precedence over their equivalent environment variables,';
+        echo '      so if both are specified, the option will be used.';
+        echo;
+        echo '      UNIT_CTL_REMOTE';
+        echo '              Equivalent to the option -r (--remote).';
+        echo;
+        echo '      UNIT_CTL_SOCK';
+        echo '              Equivalent to the option -s (--sock).';
     }
+
+    if test -v UNIT_CTL_REMOTE; then
+        local remote="$UNIT_CTL_REMOTE";
+    fi;
+    if test -v UNIT_CTL_SOCK; then
+        local sock="$UNIT_CTL_SOCK";
+    fi;
 
     while test $# -ge 1; do
         case "$1" in
@@ -321,16 +338,22 @@ unit_ctl_http()
         echo '      -c, --curl CURLOPT';
         echo '              Pass CURLOPT as an option to curl.  This script is';
         echo "              implemented in terms of curl(1), so it's useful to";
-        echo '              be able to tweak its behavior.';
+        echo '              be able to tweak its behavior.  It can be used';
+        echo '              multiple times, which will be appended (and also';
+        echo '              appended to the contents of UNIT_CTL_HTTP_CURLOPTS).';
         echo;
         echo '      -h, --help';
         echo '              Print this help.';
+        echo;
+        echo 'ENVIRONMENT';
+        echo '      UNIT_CTL_HTTP_CURLOPTS';
+        echo '              Equivalent to the option -c (--curl).';
         echo;
         echo 'EXAMPLES';
         echo "      $program_name ctl http -c --no-progress-meter GET /config >tmp;";
     }
 
-    local curl_options='';
+    local curl_options="${UNIT_CTL_HTTP_CURLOPTS:-}";
 
     while test $# -ge 1; do
         case "$1" in

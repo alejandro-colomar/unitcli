@@ -70,7 +70,7 @@ help_more_unit()
     echo;
     echo '   Subcommands';
     echo '      +-- cmd          [-h]';
-    echo '      +-- ctl          [-h] [-s SOCK] SUBCOMMAND [ARGS]';
+    echo '      +-- ctl          [-h] [-r REMOTE] [-s SOCK] SUBCOMMAND [ARGS]';
     echo '      |   +-- http     [-h] [-c CURLOPT] METHOD PATH';
     echo '      |   +-- insert   [-h] PATH INDEX';
     echo '      +-- freeport     [-h]';
@@ -194,7 +194,7 @@ unit_ctl()
     help_unit_ctl()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name ctl [-h] [-s SOCK] SUBCOMMAND [ARGS]";
+        echo "      $program_name ctl [-h] [-r REMOTE] [-s SOCK] SUBCOMMAND [ARGS]";
         echo;
         echo '   Subcommands';
         echo '      +-- http    [-h] [-c CURLOPT] METHOD PATH';
@@ -221,6 +221,11 @@ unit_ctl()
         echo '              Use SOCK as the API control socket address.  If not';
         echo '              specified, the script will try to find it.  This will';
         echo '              be used by subcommands.';
+        echo;
+        echo '      -r, --remote REMOTE';
+        echo '              Use REMOTE to reach the API control socket through an';
+        echo '              ssh(1) tunnel.  The syntax is as specified by ssh(1) as';
+        echo "              the 'destination'.  This option requires specifying -s.";
     }
 
     while test -v 1; do
@@ -228,6 +233,14 @@ unit_ctl()
         -h | --help)
             help_unit_ctl;
             exit 0;
+            ;;
+        -r | --remote)
+            if ! test -v 2; then
+                >&2 help_unit_ctl;
+                exit 1;
+            fi;
+            local remote="$2";
+            shift;
             ;;
         -s | --sock)
             if ! test -v 2; then
@@ -248,7 +261,25 @@ unit_ctl()
         shift;
     done;
 
-    if ! test -v sock; then
+    if test -v remote; then
+        if ! test -v sock; then
+            >&2 help_unit_ctl;
+            exit 1;
+        fi;
+
+        local remote_sock="$(echo "$sock" | unit_sock_filter -s)";
+        local local_sock="$(mktemp -u -p /var/run/unit/)";
+        local ssh_ctrl="$(mktemp -u -p /var/run/unit/)";
+
+        mkdir -p /var/run/unit/;
+
+        ssh -fMNnT -S "$ssh_ctrl" \
+                   -o 'ExitOnForwardFailure yes' \
+                   -L "$local_sock:$remote_sock" "$remote";
+
+        sock="unix:$local_sock";
+
+    elif ! test -v sock; then
         local sock="$(unit_sock_find)";
     fi;
 
@@ -271,6 +302,11 @@ unit_ctl()
         exit 1;
         ;;
     esac;
+
+    if test -v ssh_ctrl; then
+        ssh -S "$ssh_ctrl" -O exit "$remote" 2>/dev/null;
+        unlink "$local_sock";
+    fi;
 }
 
 

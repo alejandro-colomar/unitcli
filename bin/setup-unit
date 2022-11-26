@@ -70,7 +70,7 @@ help_more_unit()
     echo;
     echo '   Subcommands';
     echo '      +-- cmd          [-h]';
-    echo '      +-- ctl          [-h] SUBCOMMAND [ARGS]';
+    echo '      +-- ctl          [-h] [-s SOCK] SUBCOMMAND [ARGS]';
     echo '      |   +-- http     [-h] [-c CURLOPT] METHOD PATH';
     echo '      |   +-- insert   [-h] PATH INDEX';
     echo '      +-- freeport     [-h]';
@@ -194,7 +194,7 @@ unit_ctl()
     help_unit_ctl()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name ctl [-h] SUBCOMMAND [ARGS]";
+        echo "      $program_name ctl [-h] [-s SOCK] SUBCOMMAND [ARGS]";
         echo;
         echo '   Subcommands';
         echo '      +-- http    [-h] [-c CURLOPT] METHOD PATH';
@@ -216,6 +216,11 @@ unit_ctl()
         echo 'OPTIONS';
         echo '      -h, --help';
         echo '              Print this help.';
+        echo;
+        echo '      -s, --sock SOCK';
+        echo '              Use SOCK as the API control socket address.  If not';
+        echo '              specified, the script will try to find it.  This will';
+        echo '              be used by subcommands.';
     }
 
     while test -v 1; do
@@ -223,6 +228,14 @@ unit_ctl()
         -h | --help)
             help_unit_ctl;
             exit 0;
+            ;;
+        -s | --sock)
+            if ! test -v 2; then
+                >&2 help_unit_ctl;
+                exit 1;
+            fi;
+            local sock="$2";
+            shift;
             ;;
         -*)
             >&2 help_unit_ctl;
@@ -235,7 +248,9 @@ unit_ctl()
         shift;
     done;
 
-    local sock="$(unit_sock_find)";
+    if ! test -v sock; then
+        local sock="$(unit_sock_find)";
+    fi;
 
     if test ! -v 1; then
         >&2 help_unit_ctl;
@@ -264,7 +279,7 @@ unit_ctl_http()
     help_unit_ctl_http()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name ctl http [-h] [-c CURLOPT] METHOD PATH";
+        echo "      $program_name ctl [CTL-OPTS] http [-h] [-c CURLOPT] METHOD PATH";
         echo;
         echo 'DESCRIPTION';
         echo '      Send an HTTP request to the unitd(8) control socket.';
@@ -333,7 +348,7 @@ unit_ctl_insert()
     help_unit_ctl_insert()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name ctl insert [-h] PATH INDEX";
+        echo "      $program_name ctl [CTL-OPTS] insert [-h] PATH INDEX";
         echo;
         echo 'DESCRIPTION';
         echo '      Insert an element into a specified position (INDEX) in the';

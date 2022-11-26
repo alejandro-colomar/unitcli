@@ -275,11 +275,11 @@ unit_ctl()
         shift;
     done;
 
-    if test -v remote; then
-        if ! test -v sock; then
-            err 'ctl: -r: Missing -s option.';
-        fi;
+    if test -v remote && ! test -v sock; then
+        err 'ctl: -r: Missing -s option.';
+    fi;
 
+    if test -v remote; then
         local remote_sock="$(echo "$sock" | unit_sock_filter -s)";
         local local_sock="$(mktemp -u -p /var/run/unit/)";
         local ssh_ctrl="$(mktemp -u -p /var/run/unit/)";

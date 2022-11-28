@@ -1392,7 +1392,7 @@ while test $# -ge 1; do
 done;
 
 if ! test $# -ge 1; then
-    err "$1: Missing command.";
+    err "Missing command.";
 fi;
 
 case $1 in

@@ -1303,17 +1303,17 @@ unit_sock_filter()
         if test -v curl_flag; then
             if echo "$control" | grep '^unix:' >/dev/null; then
                 unix_socket="$(echo "$control" | sed 's/unix:/--unix-socket /')";
-                host='localhost';
+                host='http://localhost';
             else
                 unix_socket='';
                 host="$control";
             fi;
 
-            echo "$unix_socket http://$host";
+            echo "$unix_socket $host";
 
         elif test -v ssh_flag; then
             echo "$control" \
-            | sed 's%^unix:%%';
+            | sed -E 's,^(unix:|http://|https://),,';
 
         else
             echo "$control";

@@ -71,7 +71,7 @@ help_more_unit()
     echo;
     echo '   Subcommands';
     echo '      +-- cmd          [-h]';
-    echo '      +-- ctl          [-h] [-r REMOTE] [-s SOCK] SUBCOMMAND [ARGS]';
+    echo '      +-- ctl          [-h] [-s SOCK] SUBCOMMAND [ARGS]';
     echo '      |   +-- http     [-h] [-c CURLOPT] METHOD PATH';
     echo '      |   +-- insert   [-h] PATH INDEX';
     echo '      +-- freeport     [-h]';
@@ -194,7 +194,7 @@ unit_ctl()
     help_unit_ctl()
     {
         echo 'SYNOPSIS';
-        echo "      $program_name ctl [-h] [-r REMOTE] [-s SOCK] SUBCOMMAND [ARGS]";
+        echo "      $program_name ctl [-h] [-s SOCK] SUBCOMMAND [ARGS]";
         echo;
         echo '   Subcommands';
         echo '      +-- http    [-h] [-c CURLOPT] METHOD PATH';
@@ -222,25 +222,23 @@ unit_ctl()
         echo '              specified, the script will try to find it.  This will';
         echo '              be used by subcommands.';
         echo;
-        echo '      -r, --remote REMOTE';
-        echo '              Use REMOTE to reach the API control socket through an';
-        echo '              ssh(1) tunnel.  The syntax is as specified by ssh(1) as';
-        echo "              the 'destination'.  This option requires specifying -s.";
+        echo '              The socket can be a tcp(7) socket or a unix(7) socket,';
+        echo '              and in the case of a unix(7) socket, it can be local,';
+        echo '              or it can be in a remote machine, accessed through ssh(1).';
+        echo '              Accepted syntax for SOCK:';
+        echo;
+        echo '                  [http[s]://]host[:port]';
+        echo '                  unix:/path/to/control.sock';
+        echo '                  ssh://[user@]host[:port]/path/to/control.sock';
         echo;
         echo 'ENVIRONMENT';
         echo '      Options take precedence over their equivalent environment variables,';
         echo '      so if both are specified, the option will be used.';
         echo;
-        echo '      UNIT_CTL_REMOTE';
-        echo '              Equivalent to the option -r (--remote).';
-        echo;
         echo '      UNIT_CTL_SOCK';
         echo '              Equivalent to the option -s (--sock).';
     }
 
-    if test -v UNIT_CTL_REMOTE; then
-        local remote="$UNIT_CTL_REMOTE";
-    fi;
     if test -v UNIT_CTL_SOCK; then
         local sock="$UNIT_CTL_SOCK";
     fi;
@@ -250,13 +248,6 @@ unit_ctl()
         -h | --help)
             help_unit_ctl;
             exit 0;
-            ;;
-        -r | --remote)
-            if ! test $# -ge 2; then
-                err "ctl: $1: Missing argument.";
-            fi;
-            local remote="$2";
-            shift;
             ;;
         -s | --sock)
             if ! test $# -ge 2; then
@@ -275,12 +266,13 @@ unit_ctl()
         shift;
     done;
 
-    if test -v remote && ! test -v sock; then
-        err 'ctl: -r: Missing -s option.';
-    fi;
-
     if test ! $# -ge 1; then
         err 'ctl: Missing subcommand.';
+    fi;
+
+    if echo $sock | grep '^ssh://' >/dev/null; then
+        local remote="$(echo $sock | sed 's,\(ssh://[^/]*\).*,\1,')";
+        local sock="$(echo $sock | sed 's,ssh://[^/]*\(.*\),unix:\1,')";
     fi;
 
     case $1 in

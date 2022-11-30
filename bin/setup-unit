@@ -270,7 +270,7 @@ unit_ctl()
         err 'ctl: Missing subcommand.';
     fi;
 
-    if echo $sock | grep '^ssh://' >/dev/null; then
+    if test -v sock && echo $sock | grep '^ssh://' >/dev/null; then
         local remote="$(echo $sock | sed 's,\(ssh://[^/]*\).*,\1,')";
         local sock="$(echo $sock | sed 's,ssh://[^/]*\(.*\),unix:\1,')";
     fi;

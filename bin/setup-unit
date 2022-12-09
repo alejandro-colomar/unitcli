@@ -32,97 +32,103 @@ dry_run='no';
 
 help_unit()
 {
-    echo 'SYNOPSIS';
-    echo "      $program_name [-h] COMMAND [ARGS]";
-    echo;
-    echo '   Subcommands';
-    echo '      +-- repo-config  [-hn] [PKG-MANAGER OS-NAME OS-VERSION]';
-    echo '      +-- welcome      [-hn]';
-    echo;
-    echo 'DESCRIPTION';
-    echo '      This script simplifies installing and configuring';
-    echo '      an NGINX Unit server for first-time users.';
-    echo;
-    echo "      Run '$program_name COMMAND -h' for more information on a command.";
-    echo;
-    echo 'COMMANDS';
-    echo '      repo-config';
-    echo '              Configure your package manager with the NGINX Unit';
-    echo '              repository for later installation.';
-    echo;
-    echo '      welcome';
-    echo '              Creates an initial configuration to serve a welcome web page'
-    echo '              for NGINX Unit.';
-    echo;
-    echo 'OPTIONS';
-    echo '      -h, --help';
-    echo '              Print this help.';
-    echo;
-    echo '      --help-more';
-    echo '              Print help for more commands.  They are experimental.';
-    echo "              This is not recommended unless you know what you're doing.";
-    echo;
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name [-h] COMMAND [ARGS]
+
+    Subcommands
+        +-- repo-config  [-hn] [PKG-MANAGER OS-NAME OS-VERSION]
+        +-- welcome      [-hn]
+
+DESCRIPTION
+        This script simplifies installing and configuring an NGINX Unit server
+        for first-time users.
+
+        Run '$program_name COMMAND -h' for more information on a command.
+
+COMMANDS
+        repo-config
+                Configure your package manager with the NGINX Unit repository
+                for later installation.
+
+        welcome
+                Creates an initial configuration to serve a welcome web page
+                for NGINX Unit.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+        --help-more
+                Print help for more commands.  They are experimental.  This is
+                not recommended unless you know what you're doing.
+
+__EOF__
 }
 
 help_more_unit()
 {
-    echo 'SYNOPSIS';
-    echo "      $program_name [-h] COMMAND [ARGS]";
-    echo;
-    echo '   Subcommands';
-    echo '      +-- cmd          [-h]';
-    echo '      +-- ctl          [-h] [-s SOCK] SUBCOMMAND [ARGS]';
-    echo '      |   +-- http     [-h] [-c CURLOPT] METHOD PATH';
-    echo '      |   +-- insert   [-h] PATH INDEX';
-    echo '      +-- freeport     [-h]';
-    echo '      +-- json-ins     [-hn] JSON INDEX';
-    echo '      +-- os-probe     [-h]';
-    echo '      +-- ps           [-h] [-t TYPE]';
-    echo '      +-- repo-config  [-hn] [PKG-MANAGER OS-NAME OS-VERSION]';
-    echo '      +-- sock         [-h] SUBCOMMAND [ARGS]';
-    echo '      |   +-- filter   [-chs]';
-    echo '      |   +-- find     [-h]';
-    echo '      +-- welcome      [-hn]';
-    echo;
-    echo 'DESCRIPTION';
-    echo '      This script simplifies installing and configuring';
-    echo '      an NGINX Unit server for first-time users.';
-    echo;
-    echo "      Run '$program_name COMMAND -h' for more information on a command.";
-    echo;
-    echo 'COMMANDS';
-    echo '      cmd     Print the invocation line of unitd(8).';
-    echo;
-    echo '      ctl     Control a running unitd(8) instance through its control socket.';
-    echo;
-    echo '      freeport';
-    echo '              Print an available TCP port.';
-    echo;
-    echo '      json-ins';
-    echo '              Insert a JSON element read from standard input into a JSON';
-    echo '              array read from a file at a given INDEX.';
-    echo;
-    echo '      os-probe';
-    echo '              This script probes the OS, and prints details about the version.';
-    echo;
-    echo '      ps      List unitd(8) processes.';
-    echo;
-    echo '      repo-config';
-    echo '              Configure your package manager with the NGINX Unit';
-    echo '              repository for later installation';
-    echo;
-    echo '      sock    Print the address of the API control socket.';
-    echo;
-    echo '      welcome Set up a basic configuration on a running instance';
-    echo '              of NGINX Unit.';
-    echo;
-    echo 'OPTIONS';
-    echo '      -h, --help';
-    echo '              Print the basic help (some commands are hidden).';
-    echo;
-    echo '      --help-more';
-    echo '              Print the hidden help with more commands.';
-    echo;
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name [-h] COMMAND [ARGS]
+
+    Subcommands
+        +-- cmd          [-h]
+        +-- ctl          [-h] [-s SOCK] SUBCOMMAND [ARGS]
+        |   +-- http     [-h] [-c CURLOPT] METHOD PATH
+        |   +-- insert   [-h] PATH INDEX
+        +-- freeport     [-h]
+        +-- json-ins     [-hn] JSON INDEX
+        +-- os-probe     [-h]
+        +-- ps           [-h] [-t TYPE]
+        +-- repo-config  [-hn] [PKG-MANAGER OS-NAME OS-VERSION]
+        +-- sock         [-h] SUBCOMMAND [ARGS]
+        |   +-- filter   [-chs]
+        |   +-- find     [-h]
+        +-- welcome      [-hn]
+
+DESCRIPTION
+        This script simplifies installing and configuring
+        an NGINX Unit server for first-time users.
+
+        Run '$program_name COMMAND -h' for more information on a command.
+
+COMMANDS
+        cmd     Print the invocation line of unitd(8).
+
+        ctl     Control a running unitd(8) instance through its control socket.
+
+        freeport
+                Print an available TCP port.
+
+        json-ins
+                Insert a JSON element read from standard input into a JSON
+                array read from a file at a given INDEX.
+
+        os-probe
+                This script probes the OS, and prints details about the
+                version.
+
+        ps      List unitd(8) processes.
+
+        repo-config
+                Configure your package manager with the NGINX Unit
+                repository for later installation
+
+        sock    Print the address of the API control socket.
+
+        welcome
+                Creates an initial configuration to serve a welcome web page
+                for NGINX Unit.
+
+OPTIONS
+        -h, --help
+                Print the basic help (some commands are hidden).
+
+        --help-more
+                Print the hidden help with more commands.
+
+__EOF__
 }
 
 warn()
@@ -153,21 +159,25 @@ dry_run_eval()
 }
 
 
+help_unit_cmd()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name cmd [-h]
+
+DESCRIPTION
+        Print the invocation line of running instances of unitd(8).
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+__EOF__
+}
+
+
 unit_cmd()
 {
-    help_unit_cmd()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name cmd [-h]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Print the invocation line of running instances of unitd(8).';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -h | --help)
@@ -189,55 +199,59 @@ unit_cmd()
 }
 
 
+help_unit_ctl()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name ctl [-h] [-s SOCK] SUBCOMMAND [ARGS]
+
+    Subcommands
+        +-- http    [-h] [-c CURLOPT] METHOD PATH
+        +-- insert  [-h] PATH INDEX
+
+DESCRIPTION
+        Control a running unitd(8) instance through its control socket.
+
+        Run '$program_name ctl SUBCOMMAND -h' for more information on a
+        subcommand.
+
+SUBCOMMANDS
+        http    Send an HTTP request to the control socket.
+
+        insert  Insert an element into a specified index in an array in the
+                JSON configuration.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+        -s, --sock SOCK
+                Use SOCK as the API control socket address.  If not specified,
+                the script will try to find it.  This will be used by
+                subcommands.
+
+                The socket can be a tcp(7) socket or a unix(7) socket, and in
+                the case of a unix(7) socket, it can be local, or it can be in
+                a remote machine, accessed through ssh(1).  Accepted syntax
+                for SOCK:
+
+                    unix:/path/to/control.sock
+                    ssh://[user@]host[:port]/path/to/control.sock
+                    [http[s]://]host[:port]
+
+ENVIRONMENT
+        Options take precedence over their equivalent environment variables,
+        so if both are specified, the option will be used.
+
+        UNIT_CTL_SOCK
+                Equivalent to the option -s (--sock).
+
+__EOF__
+}
+
+
 unit_ctl()
 {
-    help_unit_ctl()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ctl [-h] [-s SOCK] SUBCOMMAND [ARGS]";
-        echo;
-        echo '   Subcommands';
-        echo '      +-- http    [-h] [-c CURLOPT] METHOD PATH';
-        echo '      +-- insert  [-h] PATH INDEX';
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Control a running unitd(8) instance through its control';
-        echo '      socket.';
-        echo;
-        echo "      Run '$program_name ctl SUBCOMMAND -h' for more information";
-        echo '      on a subcommand.';
-        echo;
-        echo 'SUBCOMMANDS';
-        echo '      http    Send an HTTP request to the control socket.';
-        echo;
-        echo '      insert  Insert an element into a specified index in an array';
-        echo '              in the JSON configuration.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -s, --sock SOCK';
-        echo '              Use SOCK as the API control socket address.  If not';
-        echo '              specified, the script will try to find it.  This will';
-        echo '              be used by subcommands.';
-        echo;
-        echo '              The socket can be a tcp(7) socket or a unix(7) socket,';
-        echo '              and in the case of a unix(7) socket, it can be local,';
-        echo '              or it can be in a remote machine, accessed through ssh(1).';
-        echo '              Accepted syntax for SOCK:';
-        echo;
-        echo '                  [http[s]://]host[:port]';
-        echo '                  unix:/path/to/control.sock';
-        echo '                  ssh://[user@]host[:port]/path/to/control.sock';
-        echo;
-        echo 'ENVIRONMENT';
-        echo '      Options take precedence over their equivalent environment variables,';
-        echo '      so if both are specified, the option will be used.';
-        echo;
-        echo '      UNIT_CTL_SOCK';
-        echo '              Equivalent to the option -s (--sock).';
-    }
 
     if test -v UNIT_CTL_SOCK; then
         local sock="$UNIT_CTL_SOCK";
@@ -291,37 +305,40 @@ unit_ctl()
 }
 
 
+help_unit_ctl_http()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name ctl [CTL-OPTS] http [-h] [-c CURLOPT] METHOD PATH
+
+DESCRIPTION
+        Send an HTTP request to the unitd(8) control socket.
+
+        The payload is read from standard input.
+
+OPTIONS
+        -c, --curl CURLOPT
+                Pass CURLOPT as an option to curl.  This script is implemented
+                in terms of curl(1), so it's useful to be able to tweak its
+                behavior.  It can be used multiple times, which will be
+                appended (and also appended to the contents of
+                UNIT_CTL_HTTP_CURLOPTS).
+
+        -h, --help
+                Print this help.
+
+ENVIRONMENT
+        UNIT_CTL_HTTP_CURLOPTS
+                Equivalent to the option -c (--curl).
+
+EXAMPLES
+        $program_name ctl http -c --no-progress-meter GET /config >tmp;
+
+__EOF__
+}
+
 unit_ctl_http()
 {
-    help_unit_ctl_http()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ctl [CTL-OPTS] http [-h] [-c CURLOPT] METHOD PATH";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Send an HTTP request to the unitd(8) control socket.';
-        echo;
-        echo '      The payload is read from standard input.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -c, --curl CURLOPT';
-        echo '              Pass CURLOPT as an option to curl.  This script is';
-        echo "              implemented in terms of curl(1), so it's useful to";
-        echo '              be able to tweak its behavior.  It can be used';
-        echo '              multiple times, which will be appended (and also';
-        echo '              appended to the contents of UNIT_CTL_HTTP_CURLOPTS).';
-        echo;
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo 'ENVIRONMENT';
-        echo '      UNIT_CTL_HTTP_CURLOPTS';
-        echo '              Equivalent to the option -c (--curl).';
-        echo;
-        echo 'EXAMPLES';
-        echo "      $program_name ctl http -c --no-progress-meter GET /config >tmp;";
-    }
-
     local curl_options="${UNIT_CTL_HTTP_CURLOPTS:-}";
 
     while test $# -ge 1; do
@@ -393,24 +410,28 @@ unit_ctl_http()
 }
 
 
+help_unit_ctl_insert()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name ctl [CTL-OPTS] insert [-h] PATH INDEX
+
+DESCRIPTION
+        Insert an element into a specified position (INDEX) in the JSON array
+        in the unitd(8) configuration API at PATH.
+
+        The new element is read from standard input.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+__EOF__
+}
+
+
 unit_ctl_insert()
 {
-    help_unit_ctl_insert()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ctl [CTL-OPTS] insert [-h] PATH INDEX";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Insert an element into a specified position (INDEX) in the';
-        echo '      JSON array in the unitd(8) configuration API at PATH.';
-        echo;
-        echo '      The new element is read from standard input.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -h | --help)
@@ -479,28 +500,32 @@ unit_ctl_insert()
 }
 
 
+help_unit_ctl_welcome()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name welcome [-hn]
+
+DESCRIPTION
+        This script tests an NGINX Unit instalation by creating an initial
+        configuration and serving a welcome web page.  Recommended for
+        first-time users.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+        -n, --dry-run
+                Dry run.  Print the commands to be run instea of actually
+                running them.  Each command is preceded by a line explaining
+                what it does.
+
+__EOF__
+}
+
+
 unit_ctl_welcome()
 {
-    help_unit_ctl_welcome()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name welcome [-hn]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      This script tests an NGINX Unit instalation by creating an initial';
-        echo '      configuration and serving a welcome web page.  Recommended for';
-        echo '      first-time users.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -n, --dry-run';
-        echo '              Dry run.  Print the commands to be run instead'
-        echo '              of actually running them.  Each command is';
-        echo '              preceded by a line explaining what it does.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -f | --force)
@@ -682,21 +707,25 @@ __EOF__";
 }
 
 
+help_unit_freeport()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name freeport [-h]
+
+DESCRIPTION
+        Print an available TCP port.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+__EOF__
+}
+
+
 unit_freeport()
 {
-    help_unit_freeport()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name freeport [-h]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Print an available TCP port.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -h | --help)
@@ -786,33 +815,37 @@ __EOF__
 }
 
 
+help_unit_json_ins()
+{
+cat <<__EOF__ ;
+SYNOPSIS
+        $program_name json-ins [-hn] JSON INDEX
+
+ARGUMENTS
+        JSON    Path to a JSON file containing a top-level array.
+
+        INDEX   Position in the array where to insert the element.
+
+DESCRIPTION
+        Insert a JSON element read from standard input into a JSON array read
+        from a file at a given INDEX.
+
+        The resulting array is printed to standard output.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+        -n, --dry-run
+                Dry run.  Print the command to be run instead of actually
+                running it.
+
+__EOF__
+}
+
+
 unit_json_ins()
 {
-    help_unit_json_ins()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name json-ins [-hn] JSON INDEX";
-        echo;
-        echo 'ARGUMENTS';
-        echo '      JSON    Path to a JSON file containing a top-level array.';
-        echo;
-        echo '      INDEX   Position in the array where to insert the element.';
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Insert a JSON element read from standard input into a JSON';
-        echo '      array read from a file at a given INDEX.';
-        echo;
-        echo '      The resulting array is printed to standard output.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -n, --dry-run';
-        echo '              Dry run.  Print the command to be run instead';
-        echo '              of actually running it.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -h | --help)
@@ -855,23 +888,27 @@ unit_json_ins()
 }
 
 
+help_unit_os_probe()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name os-probe [-h]
+
+DESCRIPTION
+        This script probes the OS, and prints details about the version.  It
+        prints three fields, delimited by ':'; the first is the package manager,
+        the second is the OS name, and the third is the OS version.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+__EOF__
+}
+
+
 unit_os_probe()
 {
-    help_unit_os_probe()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name os-probe [-h]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      This script probes the OS, and prints details about the version.';
-        echo "      It prints two fields, delimited by ':'; the first is the package";
-        echo '      manager, the second is the OS name, and the third is the OS version.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -h | --help)
@@ -928,29 +965,32 @@ unit_os_probe()
 }
 
 
+help_unit_ps()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name ps [-h] [-t TYPE]
+
+DESCRIPTION
+        List unitd(8) processes.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+        -t, --type TYPE
+                List only processes of type TYPE.  The available types are:
+
+                -  controller (c)
+                -  main (m)
+                -  router (r)
+
+__EOF__
+}
+
+
 unit_ps()
 {
-    help_unit_ps()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name ps [-h] [-t TYPE]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      List unitd(8) processes.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -t, --type TYPE';
-        echo '              List only processes of type TYPE.  The available';
-        echo '              types are:';
-        echo;
-        echo '              -  controller (c)';
-        echo '              -  main (m)';
-        echo '              -  router (r)';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -h | --help)
@@ -998,49 +1038,53 @@ unit_ps()
 }
 
 
+help_unit_repo_config()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name repo-config [-hn] [PKG-MANAGER OS-NAME OS-VERSION]
+
+DESCRIPTION
+        This script configures the NGINX Unit repository for the system
+        package manager.
+
+        The script automatically detects your OS, and works accordingly.
+        However, in case the automatic selection fails, you may specify the
+        package manager and the OS name and version.
+
+ARGUMENTS
+        PKG-MANAGER
+                Supported: 'apt', 'dnf', and 'yum'.
+
+        OS-NAME
+                Supported: 'debian', 'ubuntu', 'fedora', 'rhel', and 'amzn2'.
+
+        OS-VERSION
+                For most distributions this should be a numeric value, but for
+                debian derivatives, the codename should be used.
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+        -n, --dry-run
+                Dry run.  Print the commands to be run instea of actually
+                running them.  Each command is preceded by a line explaining
+                what it does.
+
+EXAMPLES
+        $ $prog_name repo-config apt debian bullseye;
+        $ $prog_name repo-config apt ubuntu jammy;
+        $ $prog_name repo-config dnf fedora 36;
+        $ $prog_name repo-config dnf rhel 9;
+        $ $prog_name repo-config yum amzn2 2;
+
+__EOF__
+}
+
+
 unit_repo_config()
 {
-    help_unit_repo_config()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name repo-config [-hn] [PKG-MANAGER OS-NAME OS-VERSION]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      This script configures the NGINX Unit repository for the system';
-        echo '      package manager.';
-        echo;
-        echo '      The script automatically detects your OS, and works accordingly.';
-        echo '      However, in case the automatic selection fails, you may specify the';
-        echo '      package manager and the OS name and version.';
-        echo;
-        echo 'ARGUMENTS';
-        echo '      PKG-MANAGER';
-        echo "              Supported: 'apt', 'dnf', and 'yum'.";
-        echo;
-        echo '      OS-NAME';
-        echo "              Supported: 'debian', 'ubuntu', 'fedora', 'rhel', and 'amzn2'.";
-        echo;
-        echo '      OS-VERSION';
-        echo '              For most distributions this should be a numeric value,';
-        echo '              but for debian derivatives, the codename should be used.';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -n, --dry-run';
-        echo '              Dry run.  Print the commands to be run instead'
-        echo '              of actually running them.  Each command is';
-        echo '              preceded by a line explaining what it does.';
-        echo;
-        echo 'EXAMPLES';
-        echo "      $ $prog_name repo-config apt debian bullseye;";
-        echo "      $ $prog_name repo-config apt ubuntu jammy;";
-        echo "      $ $prog_name repo-config dnf fedora 36;";
-        echo "      $ $prog_name repo-config dnf rhel 9;";
-        echo "      $ $prog_name repo-config yum amzn2 2;";
-    }
-
     installAPT ()
     {
         local os_name="$2";
@@ -1173,37 +1217,41 @@ __EOF__";
 }
 
 
+help_unit_sock()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name sock [-h] SUBCOMMAND [ARGS]
+
+    Subcommands
+        +-- filter  [-ch]
+        +-- find    [-h]
+
+DESCRIPTION
+        Print the address of the control API socket of running instances of
+        unitd(8).
+
+        Run '$program_name sock SUBCOMMAND -h' for more information on a
+        subcommand.
+
+SUBCOMMANDS
+        filter  Filter the output of the 'find' subcommand, and transform it
+                to something suitable to run other commands, such as curl(1)
+                or ssh(1).
+
+        find    Find and print the address of the control API socket of
+                running instances of unitd(8).
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+__EOF__
+}
+
+
 unit_sock()
 {
-    help_unit_sock()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name sock [-h] SUBCOMMAND [ARGS]";
-        echo;
-        echo '   Subcommands';
-        echo '      +-- filter  [-ch]';
-        echo '      +-- find    [-h]';
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Print the address of the control API socket of';
-        echo '      running instances of unitd(8).';
-        echo;
-        echo "      Run '$program_name sock SUBCOMMAND -h' for more information";
-        echo '      on a subcommand.';
-        echo;
-        echo 'SUBCOMMANDS';
-        echo "      filter  Filter the output of the 'find' subcommand, and transform";
-        echo '              it to something suitable to run other commands, such as';
-        echo '              curl(1) or ssh(1).';
-        echo;
-        echo '      find    Find and print the address of the control API socket of';
-        echo '              running instances of unitd(8).';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -h | --help)
@@ -1240,28 +1288,32 @@ unit_sock()
 }
 
 
+help_unit_sock_filter()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name sock filter [-chs]
+
+DESCRIPTION
+        Filter the output of the 'sock find' command, and transform it to
+        something suitable to run other commands, such as curl(1) or ssh(1).
+
+OPTIONS
+        -c, --curl
+                Print an argument suitable for curl(1).
+
+        -h, --help
+                Print this help.
+
+        -s, --ssh
+                Print a socket address suitable for use in an ssh(1) tunnel.
+
+__EOF__
+}
+
+
 unit_sock_filter()
 {
-    help_unit_sock_filter()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name sock filter [-chs]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Filter the output of the 'sock find' command, and transform it to';
-        echo '      something suitable to run other commands, such as curl(1) or ssh(1).';
-        echo;
-        echo 'OPTIONS';
-        echo '      -c, --curl';
-        echo '              Print an argument suitable for curl(1).';
-        echo;
-        echo '      -h, --help';
-        echo '              Print this help.';
-        echo;
-        echo '      -s, --ssh';
-        echo '              Print a socket address suitable for use in an ssh(1) tunnel.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -c | --curl)
@@ -1314,22 +1366,26 @@ unit_sock_filter()
 }
 
 
+help_unit_sock_find()
+{
+    cat <<__EOF__ ;
+SYNOPSIS
+        $program_name sock find [-h]
+
+DESCRIPTION
+        Find and print the address of the control API socket of running
+        instances of unitd(8).
+
+OPTIONS
+        -h, --help
+                Print this help.
+
+__EOF__
+}
+
+
 unit_sock_find()
 {
-    help_unit_sock_find()
-    {
-        echo 'SYNOPSIS';
-        echo "      $program_name sock find [-h]";
-        echo;
-        echo 'DESCRIPTION';
-        echo '      Find and print the address of the control API socket of';
-        echo '      running instances of unitd(8).';
-        echo;
-        echo 'OPTIONS';
-        echo '      -h, --help';
-        echo '              Print this help.';
-    }
-
     while test $# -ge 1; do
         case "$1" in
         -h | --help)

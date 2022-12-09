@@ -316,7 +316,7 @@ SYNOPSIS
         $program_name ctl [CTL-OPTS] http [-h] [-c CURLOPT] METHOD PATH
 
 DESCRIPTION
-        Send an HTTP request to the unitd(8) control socket.
+        Send an HTTP request to the unitd(8) control API socket.
 
         The payload is read from standard input.
 
@@ -338,8 +338,12 @@ ENVIRONMENT
 EXAMPLES
         $program_name ctl http -c --no-progress-meter GET /config >tmp;
 
+SEE ALSO
+        <https://unit.nginx.org/controlapi/#api-manipulation>
+
 __EOF__
 }
+
 
 unit_ctl_http()
 {
@@ -429,6 +433,9 @@ DESCRIPTION
 OPTIONS
         -h, --help
                 Print this help.
+
+SEE ALSO
+        $program_name ctl http -h;
 
 __EOF__
 }

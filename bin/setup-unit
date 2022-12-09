@@ -239,6 +239,10 @@ OPTIONS
                     ssh://[user@]host[:port]/path/to/control.sock
                     [http[s]://]host[:port]
 
+                The last form is less secure than the first two; you should
+                have a look at:
+                <https://unit.nginx.org/howto/security/#secure-socket-and-stat>
+
 ENVIRONMENT
         Options take precedence over their equivalent environment variables,
         so if both are specified, the option will be used.

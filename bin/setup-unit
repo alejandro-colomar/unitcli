@@ -1421,6 +1421,9 @@ unit_sock_find()
             | grep '\--control' \
             | cut -d' ' -f2;
         else
+            if ! command -v $cmd >/dev/null; then
+                local cmd='unitd';
+            fi;
             $cmd --help \
             | sed -n '/\--control/,+1p' \
             | grep 'default:' \
